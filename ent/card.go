@@ -33,8 +33,6 @@ type Card struct {
 	Count int `json:"count,omitempty"`
 	// ReverseCount holds the value of the "reverse_count" field.
 	ReverseCount int `json:"reverse_count,omitempty"`
-	// PracticeCount holds the value of the "practice_count" field.
-	PracticeCount int `json:"practice_count,omitempty"`
 	// UsageType holds the value of the "usage_type" field.
 	UsageType schema.UsageType `json:"usage_type,omitempty"`
 	// Shared holds the value of the "shared" field.
@@ -76,7 +74,7 @@ func (*Card) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case card.FieldShared:
 			values[i] = new(sql.NullBool)
-		case card.FieldID, card.FieldUsed, card.FieldNeeded, card.FieldCount, card.FieldReverseCount, card.FieldPracticeCount, card.FieldUserID:
+		case card.FieldID, card.FieldUsed, card.FieldNeeded, card.FieldCount, card.FieldReverseCount, card.FieldUserID:
 			values[i] = new(sql.NullInt64)
 		case card.FieldUsageType:
 			values[i] = new(sql.NullString)
@@ -148,12 +146,6 @@ func (_m *Card) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field reverse_count", values[i])
 			} else if value.Valid {
 				_m.ReverseCount = int(value.Int64)
-			}
-		case card.FieldPracticeCount:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field practice_count", values[i])
-			} else if value.Valid {
-				_m.PracticeCount = int(value.Int64)
 			}
 		case card.FieldUsageType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -234,9 +226,6 @@ func (_m *Card) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("reverse_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ReverseCount))
-	builder.WriteString(", ")
-	builder.WriteString("practice_count=")
-	builder.WriteString(fmt.Sprintf("%v", _m.PracticeCount))
 	builder.WriteString(", ")
 	builder.WriteString("usage_type=")
 	builder.WriteString(fmt.Sprintf("%v", _m.UsageType))

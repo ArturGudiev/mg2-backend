@@ -498,67 +498,6 @@
                 }
             }
         },
-        "/decrease-card-practice-count/{id}": {
-            "put": {
-                "security": [
-                    {
-                        "AccessTokenCookie": []
-                    }
-                ],
-                "description": "Decrements the card practice count by 1 (not below 0)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cards"
-                ],
-                "summary": "Decrease card practice count",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Card ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.CardFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/delete-cards": {
             "post": {
                 "security": [
@@ -896,67 +835,6 @@
                 }
             }
         },
-        "/increase-card-practice-count/{id}": {
-            "put": {
-                "security": [
-                    {
-                        "AccessTokenCookie": []
-                    }
-                ],
-                "description": "Increments the card practice count by 1",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cards"
-                ],
-                "summary": "Increase card practice count",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Card ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.CardFull"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/memory-node-by-alias/{alias}": {
             "get": {
                 "security": [
@@ -1117,6 +995,79 @@
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/memory-node/{id}/parents-path": {
+            "get": {
+                "security": [
+                    {
+                        "AccessTokenCookie": []
+                    }
+                ],
+                "description": "Returns the first-parent chain from root to the given node (inclusive)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memory-nodes"
+                ],
+                "summary": "Get parents path for a memory node",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Memory node ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.MemoryNodePathItem"
                             }
                         }
                     },
@@ -1568,7 +1519,7 @@
                         "AccessTokenCookie": []
                     }
                 ],
-                "description": "Bulk-updates count or practiceCount on multiple cards owned by the authenticated user",
+                "description": "Bulk-updates count on multiple cards owned by the authenticated user",
                 "consumes": [
                     "application/json"
                 ],
@@ -2054,9 +2005,6 @@
                 },
                 "id": {
                     "type": "integer"
-                },
-                "practiceCount": {
-                    "type": "integer"
                 }
             }
         },
@@ -2090,9 +2038,6 @@
                         "type": "integer"
                     }
                 },
-                "practiceCount": {
-                    "type": "integer"
-                },
                 "question": {
                     "type": "array",
                     "items": {
@@ -2107,6 +2052,9 @@
                 },
                 "reverseCount": {
                     "type": "integer"
+                },
+                "shared": {
+                    "type": "boolean"
                 },
                 "usageType": {
                     "$ref": "#/definitions/schema.UsageType"
@@ -2139,6 +2087,9 @@
                 },
                 "index": {
                     "type": "integer"
+                },
+                "shared": {
+                    "type": "boolean"
                 },
                 "text": {
                     "type": "string"
@@ -2178,6 +2129,9 @@
                 "index": {
                     "type": "integer"
                 },
+                "shared": {
+                    "type": "boolean"
+                },
                 "text": {
                     "type": "string"
                 },
@@ -2206,6 +2160,9 @@
                 },
                 "index": {
                     "type": "integer"
+                },
+                "shared": {
+                    "type": "boolean"
                 },
                 "text": {
                     "type": "string"
@@ -2251,9 +2208,6 @@
                         "type": "integer"
                     }
                 },
-                "practiceCount": {
-                    "type": "integer"
-                },
                 "question": {
                     "type": "array",
                     "items": {
@@ -2268,6 +2222,9 @@
                 },
                 "reverseCount": {
                     "type": "integer"
+                },
+                "shared": {
+                    "type": "boolean"
                 },
                 "usageType": {
                     "$ref": "#/definitions/schema.UsageType"
@@ -2373,6 +2330,9 @@
                         "$ref": "#/definitions/schema.CardsPriority"
                     }
                 },
+                "shared": {
+                    "type": "boolean"
+                },
                 "userId": {
                     "type": "integer"
                 }
@@ -2426,8 +2386,22 @@
                         "$ref": "#/definitions/schema.CardsPriority"
                     }
                 },
+                "shared": {
+                    "type": "boolean"
+                },
                 "userId": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.MemoryNodePathItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -2464,6 +2438,9 @@
                         "type": "integer"
                     }
                 },
+                "shared": {
+                    "type": "boolean"
+                },
                 "userId": {
                     "type": "integer"
                 }
@@ -2491,6 +2468,9 @@
                     "items": {
                         "$ref": "#/definitions/models.CardItemShort"
                     }
+                },
+                "shared": {
+                    "type": "boolean"
                 }
             }
         },
@@ -2549,7 +2529,7 @@
                     }
                 },
                 "field": {
-                    "description": "count | practiceCount",
+                    "description": "count",
                     "type": "string"
                 }
             }
@@ -2565,6 +2545,9 @@
                 },
                 "name": {
                     "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/schema.UserRole"
                 }
             }
         },
@@ -2631,6 +2614,17 @@
                 "UsageTypePassive",
                 "UsageTypeTransitional",
                 "UsageTypeCommon"
+            ]
+        },
+        "schema.UserRole": {
+            "type": "string",
+            "enum": [
+                "admin",
+                "user"
+            ],
+            "x-enum-varnames": [
+                "UserRoleAdmin",
+                "UserRoleUser"
             ]
         }
     },

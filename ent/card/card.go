@@ -29,8 +29,6 @@ const (
 	FieldCount = "count"
 	// FieldReverseCount holds the string denoting the reverse_count field in the database.
 	FieldReverseCount = "reverse_count"
-	// FieldPracticeCount holds the string denoting the practice_count field in the database.
-	FieldPracticeCount = "practice_count"
 	// FieldUsageType holds the string denoting the usage_type field in the database.
 	FieldUsageType = "usage_type"
 	// FieldShared holds the string denoting the shared field in the database.
@@ -60,7 +58,6 @@ var Columns = []string{
 	FieldNeeded,
 	FieldCount,
 	FieldReverseCount,
-	FieldPracticeCount,
 	FieldUsageType,
 	FieldShared,
 	FieldUserID,
@@ -91,8 +88,6 @@ var (
 	DefaultCount int
 	// DefaultReverseCount holds the default value on creation for the "reverse_count" field.
 	DefaultReverseCount int
-	// DefaultPracticeCount holds the default value on creation for the "practice_count" field.
-	DefaultPracticeCount int
 	// DefaultShared holds the default value on creation for the "shared" field.
 	DefaultShared bool
 	// UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
@@ -139,11 +134,6 @@ func ByCount(opts ...sql.OrderTermOption) OrderOption {
 // ByReverseCount orders the results by the reverse_count field.
 func ByReverseCount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReverseCount, opts...).ToFunc()
-}
-
-// ByPracticeCount orders the results by the practice_count field.
-func ByPracticeCount(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPracticeCount, opts...).ToFunc()
 }
 
 // ByUsageType orders the results by the usage_type field.

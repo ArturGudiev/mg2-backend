@@ -17,8 +17,6 @@ definitions:
         type: integer
       id:
         type: integer
-      practiceCount:
-        type: integer
     type: object
   models.CardFull:
     properties:
@@ -40,8 +38,6 @@ definitions:
         items:
           type: integer
         type: array
-      practiceCount:
-        type: integer
       question:
         items:
           $ref: '#/definitions/models.CardItemFull'
@@ -52,6 +48,8 @@ definitions:
         type: array
       reverseCount:
         type: integer
+      shared:
+        type: boolean
       usageType:
         $ref: '#/definitions/schema.UsageType'
       used:
@@ -73,6 +71,8 @@ definitions:
         type: string
       index:
         type: integer
+      shared:
+        type: boolean
       text:
         type: string
       type:
@@ -96,6 +96,8 @@ definitions:
         type: string
       index:
         type: integer
+      shared:
+        type: boolean
       text:
         type: string
       width:
@@ -115,6 +117,8 @@ definitions:
         type: string
       index:
         type: integer
+      shared:
+        type: boolean
       text:
         type: string
       type:
@@ -144,8 +148,6 @@ definitions:
         items:
           type: integer
         type: array
-      practiceCount:
-        type: integer
       question:
         items:
           $ref: '#/definitions/models.CardItemShort'
@@ -156,6 +158,8 @@ definitions:
         type: array
       reverseCount:
         type: integer
+      shared:
+        type: boolean
       usageType:
         $ref: '#/definitions/schema.UsageType'
       used:
@@ -227,6 +231,8 @@ definitions:
         items:
           $ref: '#/definitions/schema.CardsPriority'
         type: array
+      shared:
+        type: boolean
       userId:
         type: integer
     type: object
@@ -260,10 +266,19 @@ definitions:
         items:
           $ref: '#/definitions/schema.CardsPriority'
         type: array
+      shared:
+        type: boolean
       userId:
         type: integer
     required:
     - id
+    type: object
+  models.MemoryNodePathItem:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   models.MemoryNodeShort:
     properties:
@@ -285,6 +300,8 @@ definitions:
         items:
           type: integer
         type: array
+      shared:
+        type: boolean
       userId:
         type: integer
     required:
@@ -302,6 +319,8 @@ definitions:
         items:
           $ref: '#/definitions/models.CardItemShort'
         type: array
+      shared:
+        type: boolean
     required:
     - _id
     - answer
@@ -342,7 +361,7 @@ definitions:
           $ref: '#/definitions/models.CardFieldUpdate'
         type: array
       field:
-        description: count | practiceCount
+        description: count
         type: string
     required:
     - cards
@@ -356,6 +375,8 @@ definitions:
         type: integer
       name:
         type: string
+      role:
+        $ref: '#/definitions/schema.UserRole'
     type: object
   schema.CardItemType:
     enum:
@@ -405,6 +426,14 @@ definitions:
     - UsageTypePassive
     - UsageTypeTransitional
     - UsageTypeCommon
+  schema.UserRole:
+    enum:
+    - admin
+    - user
+    type: string
+    x-enum-varnames:
+    - UserRoleAdmin
+    - UserRoleUser
 host: localhost:3033
 info:
   contact:
@@ -729,45 +758,6 @@ paths:
       summary: Decrease card count
       tags:
       - cards
-  /decrease-card-practice-count/{id}:
-    put:
-      description: Decrements the card practice count by 1 (not below 0)
-      parameters:
-      - description: Card ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.CardFull'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "403":
-          description: Forbidden
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - AccessTokenCookie: []
-      summary: Decrease card practice count
-      tags:
-      - cards
   /delete-cards:
     post:
       consumes:
@@ -986,45 +976,6 @@ paths:
       summary: Increase card count
       tags:
       - cards
-  /increase-card-practice-count/{id}:
-    put:
-      description: Increments the card practice count by 1
-      parameters:
-      - description: Card ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.CardFull'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "403":
-          description: Forbidden
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - AccessTokenCookie: []
-      summary: Increase card practice count
-      tags:
-      - cards
   /memory-node-by-alias/{alias}:
     get:
       description: Finds a memory node by one of its aliases for the authenticated
@@ -1154,6 +1105,53 @@ paths:
       security:
       - AccessTokenCookie: []
       summary: Get memory node by ID
+      tags:
+      - memory-nodes
+  /memory-node/{id}/parents-path:
+    get:
+      description: Returns the first-parent chain from root to the given node (inclusive)
+      parameters:
+      - description: Memory node ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MemoryNodePathItem'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Get parents path for a memory node
       tags:
       - memory-nodes
   /memory-nodes:
@@ -1419,8 +1417,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Bulk-updates count or practiceCount on multiple cards owned by
-        the authenticated user
+      description: Bulk-updates count on multiple cards owned by the authenticated
+        user
       parameters:
       - description: Bulk field update
         in: body

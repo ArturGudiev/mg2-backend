@@ -75,11 +75,6 @@ func ReverseCount(v int) predicate.Card {
 	return predicate.Card(sql.FieldEQ(FieldReverseCount, v))
 }
 
-// PracticeCount applies equality check predicate on the "practice_count" field. It's identical to PracticeCountEQ.
-func PracticeCount(v int) predicate.Card {
-	return predicate.Card(sql.FieldEQ(FieldPracticeCount, v))
-}
-
 // Shared applies equality check predicate on the "shared" field. It's identical to SharedEQ.
 func Shared(v bool) predicate.Card {
 	return predicate.Card(sql.FieldEQ(FieldShared, v))
@@ -248,46 +243,6 @@ func ReverseCountLT(v int) predicate.Card {
 // ReverseCountLTE applies the LTE predicate on the "reverse_count" field.
 func ReverseCountLTE(v int) predicate.Card {
 	return predicate.Card(sql.FieldLTE(FieldReverseCount, v))
-}
-
-// PracticeCountEQ applies the EQ predicate on the "practice_count" field.
-func PracticeCountEQ(v int) predicate.Card {
-	return predicate.Card(sql.FieldEQ(FieldPracticeCount, v))
-}
-
-// PracticeCountNEQ applies the NEQ predicate on the "practice_count" field.
-func PracticeCountNEQ(v int) predicate.Card {
-	return predicate.Card(sql.FieldNEQ(FieldPracticeCount, v))
-}
-
-// PracticeCountIn applies the In predicate on the "practice_count" field.
-func PracticeCountIn(vs ...int) predicate.Card {
-	return predicate.Card(sql.FieldIn(FieldPracticeCount, vs...))
-}
-
-// PracticeCountNotIn applies the NotIn predicate on the "practice_count" field.
-func PracticeCountNotIn(vs ...int) predicate.Card {
-	return predicate.Card(sql.FieldNotIn(FieldPracticeCount, vs...))
-}
-
-// PracticeCountGT applies the GT predicate on the "practice_count" field.
-func PracticeCountGT(v int) predicate.Card {
-	return predicate.Card(sql.FieldGT(FieldPracticeCount, v))
-}
-
-// PracticeCountGTE applies the GTE predicate on the "practice_count" field.
-func PracticeCountGTE(v int) predicate.Card {
-	return predicate.Card(sql.FieldGTE(FieldPracticeCount, v))
-}
-
-// PracticeCountLT applies the LT predicate on the "practice_count" field.
-func PracticeCountLT(v int) predicate.Card {
-	return predicate.Card(sql.FieldLT(FieldPracticeCount, v))
-}
-
-// PracticeCountLTE applies the LTE predicate on the "practice_count" field.
-func PracticeCountLTE(v int) predicate.Card {
-	return predicate.Card(sql.FieldLTE(FieldPracticeCount, v))
 }
 
 // UsageTypeEQ applies the EQ predicate on the "usage_type" field.

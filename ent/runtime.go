@@ -46,16 +46,12 @@ func init() {
 	cardDescReverseCount := cardFields[7].Descriptor()
 	// card.DefaultReverseCount holds the default value on creation for the reverse_count field.
 	card.DefaultReverseCount = cardDescReverseCount.Default.(int)
-	// cardDescPracticeCount is the schema descriptor for practice_count field.
-	cardDescPracticeCount := cardFields[8].Descriptor()
-	// card.DefaultPracticeCount holds the default value on creation for the practice_count field.
-	card.DefaultPracticeCount = cardDescPracticeCount.Default.(int)
 	// cardDescShared is the schema descriptor for shared field.
-	cardDescShared := cardFields[10].Descriptor()
+	cardDescShared := cardFields[9].Descriptor()
 	// card.DefaultShared holds the default value on creation for the shared field.
 	card.DefaultShared = cardDescShared.Default.(bool)
 	// cardDescUserID is the schema descriptor for user_id field.
-	cardDescUserID := cardFields[11].Descriptor()
+	cardDescUserID := cardFields[10].Descriptor()
 	// card.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
 	card.UserIDValidator = cardDescUserID.Validators[0].(func(int) error)
 	// cardDescID is the schema descriptor for id field.

@@ -19,7 +19,6 @@ var (
 		{Name: "needed", Type: field.TypeInt, Default: 0},
 		{Name: "count", Type: field.TypeInt, Default: 0},
 		{Name: "reverse_count", Type: field.TypeInt, Default: 0},
-		{Name: "practice_count", Type: field.TypeInt, Default: 0},
 		{Name: "usage_type", Type: field.TypeEnum, Enums: []string{"active", "passive", "transitional", "common"}, Default: "common"},
 		{Name: "shared", Type: field.TypeBool, Default: false},
 		{Name: "user_id", Type: field.TypeInt},
@@ -32,7 +31,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "cards_users_cards",
-				Columns:    []*schema.Column{CardsColumns[11]},
+				Columns:    []*schema.Column{CardsColumns[10]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -41,17 +40,17 @@ var (
 			{
 				Name:    "card_usage_type",
 				Unique:  false,
-				Columns: []*schema.Column{CardsColumns[9]},
+				Columns: []*schema.Column{CardsColumns[8]},
 			},
 			{
 				Name:    "card_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{CardsColumns[11]},
+				Columns: []*schema.Column{CardsColumns[10]},
 			},
 			{
 				Name:    "card_shared",
 				Unique:  false,
-				Columns: []*schema.Column{CardsColumns[10]},
+				Columns: []*schema.Column{CardsColumns[9]},
 			},
 		},
 	}

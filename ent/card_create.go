@@ -95,20 +95,6 @@ func (_c *CardCreate) SetNillableReverseCount(v *int) *CardCreate {
 	return _c
 }
 
-// SetPracticeCount sets the "practice_count" field.
-func (_c *CardCreate) SetPracticeCount(v int) *CardCreate {
-	_c.mutation.SetPracticeCount(v)
-	return _c
-}
-
-// SetNillablePracticeCount sets the "practice_count" field if the given value is not nil.
-func (_c *CardCreate) SetNillablePracticeCount(v *int) *CardCreate {
-	if v != nil {
-		_c.SetPracticeCount(*v)
-	}
-	return _c
-}
-
 // SetUsageType sets the "usage_type" field.
 func (_c *CardCreate) SetUsageType(v schema.UsageType) *CardCreate {
 	_c.mutation.SetUsageType(v)
@@ -217,10 +203,6 @@ func (_c *CardCreate) defaults() {
 		v := card.DefaultReverseCount
 		_c.mutation.SetReverseCount(v)
 	}
-	if _, ok := _c.mutation.PracticeCount(); !ok {
-		v := card.DefaultPracticeCount
-		_c.mutation.SetPracticeCount(v)
-	}
 	if _, ok := _c.mutation.UsageType(); !ok {
 		v := card.DefaultUsageType
 		_c.mutation.SetUsageType(v)
@@ -253,9 +235,6 @@ func (_c *CardCreate) check() error {
 	}
 	if _, ok := _c.mutation.ReverseCount(); !ok {
 		return &ValidationError{Name: "reverse_count", err: errors.New(`ent: missing required field "Card.reverse_count"`)}
-	}
-	if _, ok := _c.mutation.PracticeCount(); !ok {
-		return &ValidationError{Name: "practice_count", err: errors.New(`ent: missing required field "Card.practice_count"`)}
 	}
 	if _, ok := _c.mutation.UsageType(); !ok {
 		return &ValidationError{Name: "usage_type", err: errors.New(`ent: missing required field "Card.usage_type"`)}
@@ -343,10 +322,6 @@ func (_c *CardCreate) createSpec() (*Card, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ReverseCount(); ok {
 		_spec.SetField(card.FieldReverseCount, field.TypeInt, value)
 		_node.ReverseCount = value
-	}
-	if value, ok := _c.mutation.PracticeCount(); ok {
-		_spec.SetField(card.FieldPracticeCount, field.TypeInt, value)
-		_node.PracticeCount = value
 	}
 	if value, ok := _c.mutation.UsageType(); ok {
 		_spec.SetField(card.FieldUsageType, field.TypeEnum, value)

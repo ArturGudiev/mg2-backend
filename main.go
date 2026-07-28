@@ -129,8 +129,6 @@ func main() {
 	router.POST("/cards-by-query", h.CardsByQuery)
 	router.PUT("/increase-card-count/:id", h.IncreaseCardCount)
 	router.PUT("/decrease-card-count/:id", h.DecreaseCardCount)
-	router.PUT("/increase-card-practice-count/:id", h.IncreaseCardPracticeCount)
-	router.PUT("/decrease-card-practice-count/:id", h.DecreaseCardPracticeCount)
 
 	// Card items
 	router.GET("/card-item/:id", h.GetCardItemByID)

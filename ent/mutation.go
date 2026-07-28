@@ -56,8 +56,6 @@ type CardMutation struct {
 	addcount           *int
 	reverse_count      *int
 	addreverse_count   *int
-	practice_count     *int
-	addpractice_count  *int
 	usage_type         *schema.UsageType
 	shared             *bool
 	clearedFields      map[string]struct{}
@@ -549,62 +547,6 @@ func (m *CardMutation) ResetReverseCount() {
 	m.addreverse_count = nil
 }
 
-// SetPracticeCount sets the "practice_count" field.
-func (m *CardMutation) SetPracticeCount(i int) {
-	m.practice_count = &i
-	m.addpractice_count = nil
-}
-
-// PracticeCount returns the value of the "practice_count" field in the mutation.
-func (m *CardMutation) PracticeCount() (r int, exists bool) {
-	v := m.practice_count
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldPracticeCount returns the old "practice_count" field's value of the Card entity.
-// If the Card object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CardMutation) OldPracticeCount(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldPracticeCount is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldPracticeCount requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPracticeCount: %w", err)
-	}
-	return oldValue.PracticeCount, nil
-}
-
-// AddPracticeCount adds i to the "practice_count" field.
-func (m *CardMutation) AddPracticeCount(i int) {
-	if m.addpractice_count != nil {
-		*m.addpractice_count += i
-	} else {
-		m.addpractice_count = &i
-	}
-}
-
-// AddedPracticeCount returns the value that was added to the "practice_count" field in this mutation.
-func (m *CardMutation) AddedPracticeCount() (r int, exists bool) {
-	v := m.addpractice_count
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetPracticeCount resets all changes to the "practice_count" field.
-func (m *CardMutation) ResetPracticeCount() {
-	m.practice_count = nil
-	m.addpractice_count = nil
-}
-
 // SetUsageType sets the "usage_type" field.
 func (m *CardMutation) SetUsageType(st schema.UsageType) {
 	m.usage_type = &st
@@ -774,7 +716,7 @@ func (m *CardMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CardMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 10)
 	if m.question != nil {
 		fields = append(fields, card.FieldQuestion)
 	}
@@ -795,9 +737,6 @@ func (m *CardMutation) Fields() []string {
 	}
 	if m.reverse_count != nil {
 		fields = append(fields, card.FieldReverseCount)
-	}
-	if m.practice_count != nil {
-		fields = append(fields, card.FieldPracticeCount)
 	}
 	if m.usage_type != nil {
 		fields = append(fields, card.FieldUsageType)
@@ -830,8 +769,6 @@ func (m *CardMutation) Field(name string) (ent.Value, bool) {
 		return m.Count()
 	case card.FieldReverseCount:
 		return m.ReverseCount()
-	case card.FieldPracticeCount:
-		return m.PracticeCount()
 	case card.FieldUsageType:
 		return m.UsageType()
 	case card.FieldShared:
@@ -861,8 +798,6 @@ func (m *CardMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldCount(ctx)
 	case card.FieldReverseCount:
 		return m.OldReverseCount(ctx)
-	case card.FieldPracticeCount:
-		return m.OldPracticeCount(ctx)
 	case card.FieldUsageType:
 		return m.OldUsageType(ctx)
 	case card.FieldShared:
@@ -927,13 +862,6 @@ func (m *CardMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetReverseCount(v)
 		return nil
-	case card.FieldPracticeCount:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetPracticeCount(v)
-		return nil
 	case card.FieldUsageType:
 		v, ok := value.(schema.UsageType)
 		if !ok {
@@ -975,9 +903,6 @@ func (m *CardMutation) AddedFields() []string {
 	if m.addreverse_count != nil {
 		fields = append(fields, card.FieldReverseCount)
 	}
-	if m.addpractice_count != nil {
-		fields = append(fields, card.FieldPracticeCount)
-	}
 	return fields
 }
 
@@ -994,8 +919,6 @@ func (m *CardMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedCount()
 	case card.FieldReverseCount:
 		return m.AddedReverseCount()
-	case card.FieldPracticeCount:
-		return m.AddedPracticeCount()
 	}
 	return nil, false
 }
@@ -1032,13 +955,6 @@ func (m *CardMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddReverseCount(v)
-		return nil
-	case card.FieldPracticeCount:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddPracticeCount(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Card numeric field %s", name)
@@ -1087,9 +1003,6 @@ func (m *CardMutation) ResetField(name string) error {
 		return nil
 	case card.FieldReverseCount:
 		m.ResetReverseCount()
-		return nil
-	case card.FieldPracticeCount:
-		m.ResetPracticeCount()
 		return nil
 	case card.FieldUsageType:
 		m.ResetUsageType()

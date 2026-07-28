@@ -12,10 +12,9 @@ type CardFull struct {
 	ParentNodes   []int            `json:"parentNodes"`
 	Used          int              `json:"used"`
 	Needed        int              `json:"needed"`
-	Count         int              `json:"count"`
-	ReverseCount  int              `json:"reverseCount"`
-	PracticeCount int              `json:"practiceCount"`
-	UsageType     schema.UsageType `json:"usageType"`
+	Count        int              `json:"count"`
+	ReverseCount int              `json:"reverseCount"`
+	UsageType    schema.UsageType `json:"usageType"`
 	Shared        bool             `json:"shared"`
 	UserID        int              `json:"userId"`
 }
@@ -43,10 +42,9 @@ type CardPartial struct {
 	ParentNodes   *[]int            `json:"parentNodes"`
 	Used          *int              `json:"used"`
 	Needed        *int              `json:"needed"`
-	Count         *int              `json:"count"`
-	ReverseCount  *int              `json:"reverseCount"`
-	PracticeCount *int              `json:"practiceCount"`
-	UsageType     *schema.UsageType `json:"usageType"`
+	Count        *int              `json:"count"`
+	ReverseCount *int              `json:"reverseCount"`
+	UsageType    *schema.UsageType `json:"usageType"`
 	Shared        *bool             `json:"shared"`
 }
 
@@ -61,15 +59,14 @@ type NewCardRequest struct {
 // UpdateCardsFieldRequest bulk-updates a numeric field on multiple cards.
 type UpdateCardsFieldRequest struct {
 	Cards []CardFieldUpdate `json:"cards" binding:"required"`
-	Field string            `json:"field" binding:"required"` // count | practiceCount
+	Field string            `json:"field" binding:"required"` // count
 }
 
 // CardFieldUpdate carries the ID and new field value for bulk updates.
 type CardFieldUpdate struct {
-	ID            int `json:"id"`
-	IDAlt         int `json:"_id"`
-	Count         int `json:"count"`
-	PracticeCount int `json:"practiceCount"`
+	ID    int `json:"id"`
+	IDAlt int `json:"_id"`
+	Count int `json:"count"`
 }
 
 func (u CardFieldUpdate) ResolvedID() int {

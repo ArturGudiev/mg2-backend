@@ -189,7 +189,7 @@ func (h *Handler) UpdateCard(c *gin.Context) {
 
 // UpdateCardsField handles POST /update-cards-field
 // @Summary      Bulk update card field
-// @Description  Bulk-updates count or practiceCount on multiple cards owned by the authenticated user
+// @Description  Bulk-updates count on multiple cards owned by the authenticated user
 // @Tags         cards
 // @Accept       json
 // @Produce      json
@@ -336,72 +336,6 @@ func (h *Handler) DecreaseCardCount(c *gin.Context) {
 		return
 	}
 	card, err := h.App.CardsService.DecrementCount(c.Request.Context(), id, userID)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			c.JSON(http.StatusOK, gin.H{})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, card)
-}
-
-// IncreaseCardPracticeCount handles PUT /increase-card-practice-count/:id
-// @Summary      Increase card practice count
-// @Description  Increments the card practice count by 1
-// @Tags         cards
-// @Produce      json
-// @Param        id   path      int  true  "Card ID"
-// @Success      200  {object}  models.CardFull
-// @Failure      400  {object}  map[string]string
-// @Failure      403  {object}  map[string]string
-// @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
-// @Router       /increase-card-practice-count/{id} [put]
-func (h *Handler) IncreaseCardPracticeCount(c *gin.Context) {
-	userID, ok := currentUserID(c)
-	if !ok {
-		return
-	}
-	id, ok := parsePositiveID(c, "id")
-	if !ok {
-		return
-	}
-	card, err := h.App.CardsService.IncrementPracticeCount(c.Request.Context(), id, userID)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			c.JSON(http.StatusOK, gin.H{})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, card)
-}
-
-// DecreaseCardPracticeCount handles PUT /decrease-card-practice-count/:id
-// @Summary      Decrease card practice count
-// @Description  Decrements the card practice count by 1 (not below 0)
-// @Tags         cards
-// @Produce      json
-// @Param        id   path      int  true  "Card ID"
-// @Success      200  {object}  models.CardFull
-// @Failure      400  {object}  map[string]string
-// @Failure      403  {object}  map[string]string
-// @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
-// @Router       /decrease-card-practice-count/{id} [put]
-func (h *Handler) DecreaseCardPracticeCount(c *gin.Context) {
-	userID, ok := currentUserID(c)
-	if !ok {
-		return
-	}
-	id, ok := parsePositiveID(c, "id")
-	if !ok {
-		return
-	}
-	card, err := h.App.CardsService.DecrementPracticeCount(c.Request.Context(), id, userID)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			c.JSON(http.StatusOK, gin.H{})

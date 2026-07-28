@@ -65,10 +65,9 @@ func (s *CardsService) toFull(ctx context.Context, c *ent.Card, userID int) (*mo
 		ParentNodes:   parentNodes,
 		Used:          c.Used,
 		Needed:        c.Needed,
-		Count:         c.Count,
-		ReverseCount:  c.ReverseCount,
-		PracticeCount: c.PracticeCount,
-		UsageType:     c.UsageType,
+		Count:        c.Count,
+		ReverseCount: c.ReverseCount,
+		UsageType:    c.UsageType,
 		Shared:        c.Shared,
 		UserID:        c.UserID,
 	}, nil
@@ -245,9 +244,6 @@ func (s *CardsService) UpdateField(ctx context.Context, req models.UpdateCardsFi
 		case "count":
 			count := item.Count
 			partial.Count = &count
-		case "practiceCount":
-			pc := item.PracticeCount
-			partial.PracticeCount = &pc
 		default:
 			return fmt.Errorf("unsupported field: %s", field)
 		}
@@ -307,28 +303,9 @@ func (s *CardsService) DecrementCount(ctx context.Context, id, userID int) (*mod
 	return s.Get(ctx, id, userID)
 }
 
-func (s *CardsService) IncrementPracticeCount(ctx context.Context, id, userID int) (*models.CardFull, error) {
-	if _, err := s.cardsRepo.GetForUser(ctx, id, userID); err != nil {
-		return nil, err
-	}
-	if _, err := s.cardsRepo.IncrementPracticeCount(ctx, id); err != nil {
-		return nil, err
-	}
-	return s.Get(ctx, id, userID)
-}
-
-func (s *CardsService) DecrementPracticeCount(ctx context.Context, id, userID int) (*models.CardFull, error) {
-	if _, err := s.cardsRepo.GetForUser(ctx, id, userID); err != nil {
-		return nil, err
-	}
-	if _, err := s.cardsRepo.DecrementPracticeCount(ctx, id); err != nil {
-		return nil, err
-	}
-	return s.Get(ctx, id, userID)
-}
-
 // filterCards applies a simple query language similar to the old selectCards helper.
-// Supported: "count < N", "count <= N", "count > N", "count >= N", "count == N", "limit N".
+// Supported: "count < N", "count <= N", "count > N", "count >= N", "count = N", "count == N",
+// "limit N", "--limit N". Quiz tokens like "quiz", "pquiz", and "-until N" are ignored.
 func filterCards(cards []*models.CardFull, query string) []*models.CardFull {
 	query = strings.TrimSpace(query)
 	if query == "" {
@@ -344,6 +321,17 @@ func filterCards(cards []*models.CardFull, query string) []*models.CardFull {
 			break
 		}
 
+		if m := matchPrefix(remaining, "--limit"); m != "" {
+			n, rest, ok := parseIntThenRest(m)
+			if ok {
+				if n < len(result) {
+					result = result[:n]
+				}
+				remaining = rest
+				continue
+			}
+		}
+
 		if m := matchPrefix(remaining, "limit"); m != "" {
 			n, rest, ok := parseIntThenRest(m)
 			if ok {
@@ -355,7 +343,7 @@ func filterCards(cards []*models.CardFull, query string) []*models.CardFull {
 			}
 		}
 
-		ops := []string{"<=", ">=", "==", "===", "<", ">"}
+		ops := []string{"<=", ">=", "===", "==", "=", "<", ">"}
 		matched := false
 		for _, op := range ops {
 			subject, value, rest, ok := parseComparison(remaining, op)
@@ -368,7 +356,12 @@ func filterCards(cards []*models.CardFull, query string) []*models.CardFull {
 			break
 		}
 		if !matched {
-			break
+			// Skip quiz / unknown tokens so mixed queries still filter.
+			parts := strings.Fields(remaining)
+			if len(parts) == 0 {
+				break
+			}
+			remaining = strings.TrimSpace(remaining[len(parts[0]):])
 		}
 	}
 	return result
@@ -416,8 +409,6 @@ func applyComparison(cards []*models.CardFull, subject, op string, value int) []
 		switch strings.ToLower(subject) {
 		case "count":
 			field = c.Count
-		case "practicecount", "practice_count":
-			field = c.PracticeCount
 		case "used":
 			field = c.Used
 		case "needed":
@@ -435,7 +426,7 @@ func applyComparison(cards []*models.CardFull, subject, op string, value int) []
 			keep = field > value
 		case ">=":
 			keep = field >= value
-		case "==", "===":
+		case "=", "==", "===":
 			keep = field == value
 		}
 		if keep {

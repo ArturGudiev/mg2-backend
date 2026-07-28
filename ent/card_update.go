@@ -150,27 +150,6 @@ func (_u *CardUpdate) AddReverseCount(v int) *CardUpdate {
 	return _u
 }
 
-// SetPracticeCount sets the "practice_count" field.
-func (_u *CardUpdate) SetPracticeCount(v int) *CardUpdate {
-	_u.mutation.ResetPracticeCount()
-	_u.mutation.SetPracticeCount(v)
-	return _u
-}
-
-// SetNillablePracticeCount sets the "practice_count" field if the given value is not nil.
-func (_u *CardUpdate) SetNillablePracticeCount(v *int) *CardUpdate {
-	if v != nil {
-		_u.SetPracticeCount(*v)
-	}
-	return _u
-}
-
-// AddPracticeCount adds value to the "practice_count" field.
-func (_u *CardUpdate) AddPracticeCount(v int) *CardUpdate {
-	_u.mutation.AddPracticeCount(v)
-	return _u
-}
-
 // SetUsageType sets the "usage_type" field.
 func (_u *CardUpdate) SetUsageType(v schema.UsageType) *CardUpdate {
 	_u.mutation.SetUsageType(v)
@@ -333,12 +312,6 @@ func (_u *CardUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.AddedReverseCount(); ok {
 		_spec.AddField(card.FieldReverseCount, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.PracticeCount(); ok {
-		_spec.SetField(card.FieldPracticeCount, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedPracticeCount(); ok {
-		_spec.AddField(card.FieldPracticeCount, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.UsageType(); ok {
 		_spec.SetField(card.FieldUsageType, field.TypeEnum, value)
@@ -512,27 +485,6 @@ func (_u *CardUpdateOne) SetNillableReverseCount(v *int) *CardUpdateOne {
 // AddReverseCount adds value to the "reverse_count" field.
 func (_u *CardUpdateOne) AddReverseCount(v int) *CardUpdateOne {
 	_u.mutation.AddReverseCount(v)
-	return _u
-}
-
-// SetPracticeCount sets the "practice_count" field.
-func (_u *CardUpdateOne) SetPracticeCount(v int) *CardUpdateOne {
-	_u.mutation.ResetPracticeCount()
-	_u.mutation.SetPracticeCount(v)
-	return _u
-}
-
-// SetNillablePracticeCount sets the "practice_count" field if the given value is not nil.
-func (_u *CardUpdateOne) SetNillablePracticeCount(v *int) *CardUpdateOne {
-	if v != nil {
-		_u.SetPracticeCount(*v)
-	}
-	return _u
-}
-
-// AddPracticeCount adds value to the "practice_count" field.
-func (_u *CardUpdateOne) AddPracticeCount(v int) *CardUpdateOne {
-	_u.mutation.AddPracticeCount(v)
 	return _u
 }
 
@@ -728,12 +680,6 @@ func (_u *CardUpdateOne) sqlSave(ctx context.Context) (_node *Card, err error) {
 	}
 	if value, ok := _u.mutation.AddedReverseCount(); ok {
 		_spec.AddField(card.FieldReverseCount, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.PracticeCount(); ok {
-		_spec.SetField(card.FieldPracticeCount, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedPracticeCount(); ok {
-		_spec.AddField(card.FieldPracticeCount, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.UsageType(); ok {
 		_spec.SetField(card.FieldUsageType, field.TypeEnum, value)

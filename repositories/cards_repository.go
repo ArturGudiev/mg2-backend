@@ -89,7 +89,6 @@ func (r *CardsRepository) Create(
 		SetNeeded(0).
 		SetCount(0).
 		SetReverseCount(0).
-		SetPracticeCount(0).
 		SetUsageType(usageType).
 		SetShared(shared).
 		SetUserID(userID).
@@ -118,9 +117,6 @@ func (r *CardsRepository) Update(ctx context.Context, partial models.CardPartial
 	}
 	if partial.ReverseCount != nil {
 		upd = upd.SetReverseCount(*partial.ReverseCount)
-	}
-	if partial.PracticeCount != nil {
-		upd = upd.SetPracticeCount(*partial.PracticeCount)
 	}
 	if partial.UsageType != nil {
 		upd = upd.SetUsageType(*partial.UsageType)
@@ -153,24 +149,4 @@ func (r *CardsRepository) DecrementCount(ctx context.Context, id int) (*ent.Card
 		next = 0
 	}
 	return r.client.Card.UpdateOneID(id).SetCount(next).Save(ctx)
-}
-
-func (r *CardsRepository) IncrementPracticeCount(ctx context.Context, id int) (*ent.Card, error) {
-	c, err := r.Get(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	return r.client.Card.UpdateOneID(id).SetPracticeCount(c.PracticeCount + 1).Save(ctx)
-}
-
-func (r *CardsRepository) DecrementPracticeCount(ctx context.Context, id int) (*ent.Card, error) {
-	c, err := r.Get(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	next := c.PracticeCount - 1
-	if next < 0 {
-		next = 0
-	}
-	return r.client.Card.UpdateOneID(id).SetPracticeCount(next).Save(ctx)
 }

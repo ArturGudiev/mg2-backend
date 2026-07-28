@@ -76,8 +76,6 @@ func (Card) Fields() []ent.Field {
 			Default(0),
 		field.Int("reverse_count").
 			Default(0),
-		field.Int("practice_count").
-			Default(0),
 		field.Enum("usage_type").
 			GoType(UsageType("")).
 			Default(string(UsageTypeCommon)),
