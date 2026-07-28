@@ -1,0 +1,14 @@
+.git
+.gitignore
+*.md
+.vscode
+.idea
+*.log
+.env
+.env.*
+!.env.example
+temp/
+*.test
+coverage.*
+*.prof
+memoryguard
