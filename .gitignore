@@ -1,0 +1,52 @@
+# Old reference project
+temp/
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+memoryguard
+
+# Test / coverage
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Dependencies
+vendor/
+go.work
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.swp
+*~
+
+# OS
+.DS_Store
+._*
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs / temp
+*.log
+logs/
+tmp/
+*.tmp
+
+# DB
+*.db
+*.sqlite
+*.sqlite3
+
+# Profiling
+*.prof
+config.local.*
+*.local

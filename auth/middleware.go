@@ -1,0 +1,58 @@
+package auth
+
+import (
+	"net/http"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+)
+
+func isPublicRoute(method, path string) bool {
+	if method == http.MethodOptions {
+		return true
+	}
+	if strings.HasPrefix(path, "/swagger") {
+		return true
+	}
+
+	switch {
+	case method == http.MethodPost && path == "/users/login":
+		return true
+	case method == http.MethodPost && path == "/users":
+		return true
+	case method == http.MethodPost && path == "/users/refresh":
+		return true
+	case method == http.MethodPost && path == "/users/logout":
+		return true
+	case method == http.MethodGet && path == "/":
+		return true
+	}
+
+	return false
+}
+
+// AuthMiddleware requires a valid access_token cookie on protected routes.
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if isPublicRoute(c.Request.Method, c.Request.URL.Path) {
+			c.Next()
+			return
+		}
+
+		accessToken, err := c.Cookie(AccessTokenCookieName)
+		if err != nil || accessToken == "" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "access token required"})
+			return
+		}
+
+		claims, err := ValidateAccessToken(accessToken)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "invalid or expired access token"})
+			return
+		}
+
+		c.Set("userID", claims.UserID)
+		c.Set("userEmail", claims.Email)
+		c.Next()
+	}
+}

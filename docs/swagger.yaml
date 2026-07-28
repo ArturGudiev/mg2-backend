@@ -1,0 +1,1725 @@
+basePath: /
+definitions:
+  handlers.IDsRequest:
+    properties:
+      ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - ids
+    type: object
+  models.CardFieldUpdate:
+    properties:
+      _id:
+        type: integer
+      count:
+        type: integer
+      id:
+        type: integer
+      practiceCount:
+        type: integer
+    type: object
+  models.CardFull:
+    properties:
+      answer:
+        items:
+          $ref: '#/definitions/models.CardItemFull'
+        type: array
+      answerIds:
+        items:
+          type: integer
+        type: array
+      count:
+        type: integer
+      id:
+        type: integer
+      needed:
+        type: integer
+      parentNodes:
+        items:
+          type: integer
+        type: array
+      practiceCount:
+        type: integer
+      question:
+        items:
+          $ref: '#/definitions/models.CardItemFull'
+        type: array
+      questionIds:
+        items:
+          type: integer
+        type: array
+      reverseCount:
+        type: integer
+      usageType:
+        $ref: '#/definitions/schema.UsageType'
+      used:
+        type: integer
+      userId:
+        type: integer
+    type: object
+  models.CardItemFull:
+    properties:
+      code:
+        type: string
+      extension:
+        type: string
+      formula:
+        type: string
+      id:
+        type: integer
+      imagePath:
+        type: string
+      index:
+        type: integer
+      text:
+        type: string
+      type:
+        $ref: '#/definitions/schema.CardItemType'
+      userId:
+        type: integer
+      width:
+        type: string
+    type: object
+  models.CardItemPartial:
+    properties:
+      code:
+        type: string
+      extension:
+        type: string
+      formula:
+        type: string
+      id:
+        type: integer
+      imagePath:
+        type: string
+      index:
+        type: integer
+      text:
+        type: string
+      width:
+        type: string
+    required:
+    - id
+    type: object
+  models.CardItemShort:
+    properties:
+      code:
+        type: string
+      extension:
+        type: string
+      formula:
+        type: string
+      imagePath:
+        type: string
+      index:
+        type: integer
+      text:
+        type: string
+      type:
+        $ref: '#/definitions/schema.CardItemType'
+      width:
+        type: string
+    required:
+    - type
+    type: object
+  models.CardPartial:
+    properties:
+      answer:
+        items:
+          $ref: '#/definitions/models.CardItemShort'
+        type: array
+      answerIds:
+        items:
+          type: integer
+        type: array
+      count:
+        type: integer
+      id:
+        type: integer
+      needed:
+        type: integer
+      parentNodes:
+        items:
+          type: integer
+        type: array
+      practiceCount:
+        type: integer
+      question:
+        items:
+          $ref: '#/definitions/models.CardItemShort'
+        type: array
+      questionIds:
+        items:
+          type: integer
+        type: array
+      reverseCount:
+        type: integer
+      usageType:
+        $ref: '#/definitions/schema.UsageType'
+      used:
+        type: integer
+    required:
+    - id
+    type: object
+  models.CardsByQueryRequest:
+    properties:
+      group:
+        $ref: '#/definitions/schema.CardsGroup'
+      id:
+        type: integer
+      priority:
+        $ref: '#/definitions/schema.CardsPriority'
+      query:
+        type: string
+    required:
+    - id
+    type: object
+  models.LoginUserRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      password:
+        example: password
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.LoginUserResponse:
+    properties:
+      accessToken:
+        type: string
+      refreshToken:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+    type: object
+  models.MemoryNodeFull:
+    properties:
+      aliases:
+        items:
+          type: string
+        type: array
+      cards:
+        items:
+          type: integer
+        type: array
+      children:
+        items:
+          type: integer
+        type: array
+      groups:
+        items:
+          $ref: '#/definitions/schema.CardsGroup'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+      parents:
+        items:
+          type: integer
+        type: array
+      priorities:
+        items:
+          $ref: '#/definitions/schema.CardsPriority'
+        type: array
+      userId:
+        type: integer
+    type: object
+  models.MemoryNodePartial:
+    properties:
+      aliases:
+        items:
+          type: string
+        type: array
+      cards:
+        items:
+          type: integer
+        type: array
+      children:
+        items:
+          type: integer
+        type: array
+      groups:
+        items:
+          $ref: '#/definitions/schema.CardsGroup'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+      parents:
+        items:
+          type: integer
+        type: array
+      priorities:
+        items:
+          $ref: '#/definitions/schema.CardsPriority'
+        type: array
+      userId:
+        type: integer
+    required:
+    - id
+    type: object
+  models.MemoryNodeShort:
+    properties:
+      aliases:
+        items:
+          type: string
+        type: array
+      cards:
+        items:
+          type: integer
+        type: array
+      children:
+        items:
+          type: integer
+        type: array
+      name:
+        type: string
+      parents:
+        items:
+          type: integer
+        type: array
+      userId:
+        type: integer
+    required:
+    - name
+    type: object
+  models.NewCardRequest:
+    properties:
+      _id:
+        type: integer
+      answer:
+        items:
+          $ref: '#/definitions/models.CardItemShort'
+        type: array
+      question:
+        items:
+          $ref: '#/definitions/models.CardItemShort'
+        type: array
+    required:
+    - _id
+    - answer
+    - question
+    type: object
+  models.NewMemoryNodeRequest:
+    properties:
+      memoryNode:
+        $ref: '#/definitions/models.MemoryNodeShort'
+    required:
+    - memoryNode
+    type: object
+  models.NewUserRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: password
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  models.RefreshTokenRequest:
+    properties:
+      refreshToken:
+        type: string
+    type: object
+  models.UpdateCardsFieldRequest:
+    properties:
+      cards:
+        items:
+          $ref: '#/definitions/models.CardFieldUpdate'
+        type: array
+      field:
+        description: count | practiceCount
+        type: string
+    required:
+    - cards
+    - field
+    type: object
+  models.UserResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  schema.CardItemType:
+    enum:
+    - TEXT
+    - TEXT_WITH_HIGHLIGHTED_SYMBOL
+    - CODE
+    - FORMULA
+    - IMAGE
+    - WORD_WITH_STRESS
+    type: string
+    x-enum-varnames:
+    - CardItemTypeText
+    - CardItemTypeTextWithHighlightedSymbol
+    - CardItemTypeCode
+    - CardItemTypeFormula
+    - CardItemTypeImage
+    - CardItemTypeWordWithStress
+  schema.CardsGroup:
+    properties:
+      cards:
+        items:
+          type: integer
+        type: array
+      name:
+        type: string
+    type: object
+  schema.CardsPriority:
+    properties:
+      cards:
+        items:
+          type: integer
+        type: array
+      name:
+        type: string
+      number:
+        type: integer
+    type: object
+  schema.UsageType:
+    enum:
+    - active
+    - passive
+    - transitional
+    - common
+    type: string
+    x-enum-varnames:
+    - UsageTypeActive
+    - UsageTypePassive
+    - UsageTypeTransitional
+    - UsageTypeCommon
+host: localhost:3033
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: |-
+    Memory nodes, cards, and card items API server.
+    **Authentication:** Use `POST /users/login`, copy `accessToken` from the response, then click **Authorize** and paste it as the `access_token` cookie value. Alternatively, login from Swagger on the same host and cookies are sent automatically.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: MemoryGuard API
+  version: "1.0"
+paths:
+  /:
+    get:
+      consumes:
+      - application/json
+      description: Returns a welcome message
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Root endpoint
+      tags:
+      - general
+  /card-item/{id}:
+    delete:
+      description: Deletes a card item by ID owned by the authenticated user
+      parameters:
+      - description: Card item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Delete card item
+      tags:
+      - card-items
+    get:
+      description: Returns a card item by its ID for the authenticated user
+      parameters:
+      - description: Card item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CardItemFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Get card item by ID
+      tags:
+      - card-items
+  /card-items:
+    get:
+      description: Returns all card items for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CardItemFull'
+            type: array
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: List card items
+      tags:
+      - card-items
+  /card/{id}:
+    get:
+      description: Returns a card with resolved question/answer card items for the
+        authenticated user
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CardFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Get card by ID
+      tags:
+      - cards
+  /cards:
+    get:
+      description: Returns cards for the given JSON ids query parameter owned by the
+        authenticated user
+      parameters:
+      - description: JSON array of IDs, e.g. [1,2,3]
+        in: query
+        name: ids
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CardFull'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: List cards by IDs (query)
+      tags:
+      - cards
+  /cards-by-query:
+    post:
+      consumes:
+      - application/json
+      description: Returns cards for a memory node (or priority/group), filtered by
+        a simple query string
+      parameters:
+      - description: Query request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CardsByQueryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CardFull'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Filter cards by query
+      tags:
+      - cards
+  /decrease-card-count/{id}:
+    put:
+      description: Decrements the card count by 1 (not below 0)
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CardFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Decrease card count
+      tags:
+      - cards
+  /decrease-card-practice-count/{id}:
+    put:
+      description: Decrements the card practice count by 1 (not below 0)
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CardFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Decrease card practice count
+      tags:
+      - cards
+  /delete-cards:
+    post:
+      consumes:
+      - application/json
+      description: Deletes cards by IDs owned by the authenticated user and unlinks
+        them from parent memory nodes
+      parameters:
+      - description: List of card IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.IDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Delete cards
+      tags:
+      - cards
+  /get-card-items:
+    post:
+      consumes:
+      - application/json
+      description: Returns multiple card items by their IDs for the authenticated
+        user
+      parameters:
+      - description: List of card item IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.IDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CardItemFull'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Get card items by IDs
+      tags:
+      - card-items
+  /get-cards:
+    post:
+      consumes:
+      - application/json
+      description: Returns multiple cards by their IDs for the authenticated user
+      parameters:
+      - description: List of card IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.IDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CardFull'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Get cards by IDs
+      tags:
+      - cards
+  /get-memory-nodes:
+    post:
+      consumes:
+      - application/json
+      description: Returns multiple memory nodes by their IDs for the authenticated
+        user
+      parameters:
+      - description: List of memory node IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.IDsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MemoryNodeFull'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Get memory nodes by IDs
+      tags:
+      - memory-nodes
+  /increase-card-count/{id}:
+    put:
+      description: Increments the card count by 1
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CardFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Increase card count
+      tags:
+      - cards
+  /increase-card-practice-count/{id}:
+    put:
+      description: Increments the card practice count by 1
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CardFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Increase card practice count
+      tags:
+      - cards
+  /memory-node-by-alias/{alias}:
+    get:
+      description: Finds a memory node by one of its aliases for the authenticated
+        user
+      parameters:
+      - description: Alias
+        in: path
+        name: alias
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MemoryNodeFull'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Get memory node by alias
+      tags:
+      - memory-nodes
+  /memory-node/{id}:
+    delete:
+      description: Deletes a memory node by ID owned by the authenticated user
+      parameters:
+      - description: Memory node ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Delete memory node
+      tags:
+      - memory-nodes
+    get:
+      description: Returns a memory node by its ID for the authenticated user
+      parameters:
+      - description: Memory node ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MemoryNodeFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Get memory node by ID
+      tags:
+      - memory-nodes
+  /memory-nodes:
+    get:
+      description: Returns all memory nodes for the authenticated user, or a subset
+        when ids query is provided as a JSON array
+      parameters:
+      - description: JSON array of IDs, e.g. [1,2,3]
+        in: query
+        name: ids
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MemoryNodeFull'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: List memory nodes
+      tags:
+      - memory-nodes
+  /new-card:
+    post:
+      consumes:
+      - application/json
+      description: Creates card items and a card under a memory node for the authenticated
+        user
+      parameters:
+      - description: New card request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewCardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CardFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Create card
+      tags:
+      - cards
+  /new-card-item:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new card item owned by the authenticated user
+      parameters:
+      - description: Card item
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CardItemShort'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CardItemFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Create card item
+      tags:
+      - card-items
+  /new-memory-node:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new memory node owned by the authenticated user
+      parameters:
+      - description: Memory node creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewMemoryNodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MemoryNodeFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Create memory node
+      tags:
+      - memory-nodes
+  /update-card:
+    put:
+      consumes:
+      - application/json
+      description: Partially updates an existing card owned by the authenticated user
+      parameters:
+      - description: Card update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CardPartial'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CardFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Update card
+      tags:
+      - cards
+  /update-card-item:
+    put:
+      consumes:
+      - application/json
+      description: Partially updates an existing card item owned by the authenticated
+        user
+      parameters:
+      - description: Card item update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CardItemPartial'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CardItemFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Update card item
+      tags:
+      - card-items
+  /update-cards-field:
+    post:
+      consumes:
+      - application/json
+      description: Bulk-updates count or practiceCount on multiple cards owned by
+        the authenticated user
+      parameters:
+      - description: Bulk field update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateCardsFieldRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Bulk update card field
+      tags:
+      - cards
+  /update-memory-node:
+    put:
+      consumes:
+      - application/json
+      description: Partially updates an existing memory node owned by the authenticated
+        user
+      parameters:
+      - description: Memory node update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.MemoryNodePartial'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MemoryNodeFull'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Update memory node
+      tags:
+      - memory-nodes
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new user
+      parameters:
+      - description: User to add
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - "":
+        - ""
+      summary: Add a user
+      tags:
+      - users
+  /users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Get a user by their ID
+      tags:
+      - users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a user and returns tokens. Sets auth cookies. Copy accessToken
+        into Authorize for other endpoints.
+      parameters:
+      - description: User to login
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LoginUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - "":
+        - ""
+      summary: Logs in a user
+      tags:
+      - users
+  /users/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revokes refresh token and clears auth cookies
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - "":
+        - ""
+      summary: Logout user
+      tags:
+      - users
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: Returns the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: Get current user
+      tags:
+      - users
+  /users/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Exchanges a refresh token for a new access and refresh token pair
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/models.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LoginUserResponse'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - "":
+        - ""
+      summary: Refresh access token
+      tags:
+      - users
+schemes:
+- http
+- https
+security:
+- AccessTokenCookie: []
+securityDefinitions:
+  AccessTokenCookie:
+    in: cookie
+    name: access_token
+    type: apiKey
+swagger: "2.0"
