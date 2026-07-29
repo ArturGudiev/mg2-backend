@@ -62,6 +62,7 @@ func (MemoryNode) Edges() []ent.Edge {
 			Unique().
 			Required().
 			Field("user_id"),
+		edge.To("memory_node_users", MemoryNodeUser.Type),
 	}
 }
 

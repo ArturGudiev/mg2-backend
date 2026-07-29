@@ -41,9 +41,15 @@ type UserEdges struct {
 	Cards []*Card `json:"cards,omitempty"`
 	// CardItems holds the value of the card_items edge.
 	CardItems []*CardItem `json:"card_items,omitempty"`
+	// CardUserCounts holds the value of the card_user_counts edge.
+	CardUserCounts []*CardUserCount `json:"card_user_counts,omitempty"`
+	// CardUsers holds the value of the card_users edge.
+	CardUsers []*CardUser `json:"card_users,omitempty"`
+	// MemoryNodeUsers holds the value of the memory_node_users edge.
+	MemoryNodeUsers []*MemoryNodeUser `json:"memory_node_users,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [7]bool
 }
 
 // RefreshTokensOrErr returns the RefreshTokens value or an error if the edge
@@ -80,6 +86,33 @@ func (e UserEdges) CardItemsOrErr() ([]*CardItem, error) {
 		return e.CardItems, nil
 	}
 	return nil, &NotLoadedError{edge: "card_items"}
+}
+
+// CardUserCountsOrErr returns the CardUserCounts value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CardUserCountsOrErr() ([]*CardUserCount, error) {
+	if e.loadedTypes[4] {
+		return e.CardUserCounts, nil
+	}
+	return nil, &NotLoadedError{edge: "card_user_counts"}
+}
+
+// CardUsersOrErr returns the CardUsers value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CardUsersOrErr() ([]*CardUser, error) {
+	if e.loadedTypes[5] {
+		return e.CardUsers, nil
+	}
+	return nil, &NotLoadedError{edge: "card_users"}
+}
+
+// MemoryNodeUsersOrErr returns the MemoryNodeUsers value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) MemoryNodeUsersOrErr() ([]*MemoryNodeUser, error) {
+	if e.loadedTypes[6] {
+		return e.MemoryNodeUsers, nil
+	}
+	return nil, &NotLoadedError{edge: "memory_node_users"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -167,6 +200,21 @@ func (_m *User) QueryCards() *CardQuery {
 // QueryCardItems queries the "card_items" edge of the User entity.
 func (_m *User) QueryCardItems() *CardItemQuery {
 	return NewUserClient(_m.config).QueryCardItems(_m)
+}
+
+// QueryCardUserCounts queries the "card_user_counts" edge of the User entity.
+func (_m *User) QueryCardUserCounts() *CardUserCountQuery {
+	return NewUserClient(_m.config).QueryCardUserCounts(_m)
+}
+
+// QueryCardUsers queries the "card_users" edge of the User entity.
+func (_m *User) QueryCardUsers() *CardUserQuery {
+	return NewUserClient(_m.config).QueryCardUsers(_m)
+}
+
+// QueryMemoryNodeUsers queries the "memory_node_users" edge of the User entity.
+func (_m *User) QueryMemoryNodeUsers() *MemoryNodeUserQuery {
+	return NewUserClient(_m.config).QueryMemoryNodeUsers(_m)
 }
 
 // Update returns a builder for updating this User.

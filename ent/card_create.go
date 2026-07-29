@@ -4,6 +4,8 @@ package ent
 
 import (
 	"arturgudiev/memoryguard/ent/card"
+	"arturgudiev/memoryguard/ent/carduser"
+	"arturgudiev/memoryguard/ent/cardusercount"
 	"arturgudiev/memoryguard/ent/schema"
 	"arturgudiev/memoryguard/ent/user"
 	"context"
@@ -138,6 +140,36 @@ func (_c *CardCreate) SetID(v int) *CardCreate {
 // SetUser sets the "user" edge to the User entity.
 func (_c *CardCreate) SetUser(v *User) *CardCreate {
 	return _c.SetUserID(v.ID)
+}
+
+// AddUserCountIDs adds the "user_counts" edge to the CardUserCount entity by IDs.
+func (_c *CardCreate) AddUserCountIDs(ids ...int) *CardCreate {
+	_c.mutation.AddUserCountIDs(ids...)
+	return _c
+}
+
+// AddUserCounts adds the "user_counts" edges to the CardUserCount entity.
+func (_c *CardCreate) AddUserCounts(v ...*CardUserCount) *CardCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUserCountIDs(ids...)
+}
+
+// AddCardUserIDs adds the "card_users" edge to the CardUser entity by IDs.
+func (_c *CardCreate) AddCardUserIDs(ids ...int) *CardCreate {
+	_c.mutation.AddCardUserIDs(ids...)
+	return _c
+}
+
+// AddCardUsers adds the "card_users" edges to the CardUser entity.
+func (_c *CardCreate) AddCardUsers(v ...*CardUser) *CardCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCardUserIDs(ids...)
 }
 
 // Mutation returns the CardMutation object of the builder.
@@ -346,6 +378,38 @@ func (_c *CardCreate) createSpec() (*Card, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.UserID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UserCountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   card.UserCountsTable,
+			Columns: []string{card.UserCountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cardusercount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CardUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   card.CardUsersTable,
+			Columns: []string{card.CardUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carduser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

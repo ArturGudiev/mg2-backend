@@ -5,7 +5,10 @@ package ent
 import (
 	"arturgudiev/memoryguard/ent/card"
 	"arturgudiev/memoryguard/ent/carditem"
+	"arturgudiev/memoryguard/ent/carduser"
+	"arturgudiev/memoryguard/ent/cardusercount"
 	"arturgudiev/memoryguard/ent/memorynode"
+	"arturgudiev/memoryguard/ent/memorynodeuser"
 	"arturgudiev/memoryguard/ent/refreshtoken"
 	"arturgudiev/memoryguard/ent/schema"
 	"arturgudiev/memoryguard/ent/user"
@@ -120,6 +123,51 @@ func (_c *UserCreate) AddCardItems(v ...*CardItem) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddCardItemIDs(ids...)
+}
+
+// AddCardUserCountIDs adds the "card_user_counts" edge to the CardUserCount entity by IDs.
+func (_c *UserCreate) AddCardUserCountIDs(ids ...int) *UserCreate {
+	_c.mutation.AddCardUserCountIDs(ids...)
+	return _c
+}
+
+// AddCardUserCounts adds the "card_user_counts" edges to the CardUserCount entity.
+func (_c *UserCreate) AddCardUserCounts(v ...*CardUserCount) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCardUserCountIDs(ids...)
+}
+
+// AddCardUserIDs adds the "card_users" edge to the CardUser entity by IDs.
+func (_c *UserCreate) AddCardUserIDs(ids ...int) *UserCreate {
+	_c.mutation.AddCardUserIDs(ids...)
+	return _c
+}
+
+// AddCardUsers adds the "card_users" edges to the CardUser entity.
+func (_c *UserCreate) AddCardUsers(v ...*CardUser) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCardUserIDs(ids...)
+}
+
+// AddMemoryNodeUserIDs adds the "memory_node_users" edge to the MemoryNodeUser entity by IDs.
+func (_c *UserCreate) AddMemoryNodeUserIDs(ids ...int) *UserCreate {
+	_c.mutation.AddMemoryNodeUserIDs(ids...)
+	return _c
+}
+
+// AddMemoryNodeUsers adds the "memory_node_users" edges to the MemoryNodeUser entity.
+func (_c *UserCreate) AddMemoryNodeUsers(v ...*MemoryNodeUser) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMemoryNodeUserIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -307,6 +355,54 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(carditem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CardUserCountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUserCountsTable,
+			Columns: []string{user.CardUserCountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cardusercount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CardUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUsersTable,
+			Columns: []string{user.CardUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carduser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MemoryNodeUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MemoryNodeUsersTable,
+			Columns: []string{user.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

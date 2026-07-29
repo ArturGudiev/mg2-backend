@@ -99,6 +99,93 @@ var (
 			},
 		},
 	}
+	// CardUsersColumns holds the columns for the "card_users" table.
+	CardUsersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "card_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// CardUsersTable holds the schema information for the "card_users" table.
+	CardUsersTable = &schema.Table{
+		Name:       "card_users",
+		Columns:    CardUsersColumns,
+		PrimaryKey: []*schema.Column{CardUsersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "card_users_cards_card_users",
+				Columns:    []*schema.Column{CardUsersColumns[1]},
+				RefColumns: []*schema.Column{CardsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "card_users_users_card_users",
+				Columns:    []*schema.Column{CardUsersColumns[2]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "carduser_card_id_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{CardUsersColumns[1], CardUsersColumns[2]},
+			},
+			{
+				Name:    "carduser_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{CardUsersColumns[2]},
+			},
+			{
+				Name:    "carduser_card_id",
+				Unique:  false,
+				Columns: []*schema.Column{CardUsersColumns[1]},
+			},
+		},
+	}
+	// CardUserCountsColumns holds the columns for the "card_user_counts" table.
+	CardUserCountsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "count", Type: field.TypeInt, Default: 0},
+		{Name: "card_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// CardUserCountsTable holds the schema information for the "card_user_counts" table.
+	CardUserCountsTable = &schema.Table{
+		Name:       "card_user_counts",
+		Columns:    CardUserCountsColumns,
+		PrimaryKey: []*schema.Column{CardUserCountsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "card_user_counts_cards_user_counts",
+				Columns:    []*schema.Column{CardUserCountsColumns[2]},
+				RefColumns: []*schema.Column{CardsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "card_user_counts_users_card_user_counts",
+				Columns:    []*schema.Column{CardUserCountsColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "cardusercount_card_id_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{CardUserCountsColumns[2], CardUserCountsColumns[3]},
+			},
+			{
+				Name:    "cardusercount_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{CardUserCountsColumns[3]},
+			},
+			{
+				Name:    "cardusercount_card_id",
+				Unique:  false,
+				Columns: []*schema.Column{CardUserCountsColumns[2]},
+			},
+		},
+	}
 	// MemoryNodesColumns holds the columns for the "memory_nodes" table.
 	MemoryNodesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -135,6 +222,49 @@ var (
 				Name:    "memorynode_shared",
 				Unique:  false,
 				Columns: []*schema.Column{MemoryNodesColumns[8]},
+			},
+		},
+	}
+	// MemoryNodeUsersColumns holds the columns for the "memory_node_users" table.
+	MemoryNodeUsersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "memory_node_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// MemoryNodeUsersTable holds the schema information for the "memory_node_users" table.
+	MemoryNodeUsersTable = &schema.Table{
+		Name:       "memory_node_users",
+		Columns:    MemoryNodeUsersColumns,
+		PrimaryKey: []*schema.Column{MemoryNodeUsersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "memory_node_users_memory_nodes_memory_node_users",
+				Columns:    []*schema.Column{MemoryNodeUsersColumns[1]},
+				RefColumns: []*schema.Column{MemoryNodesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "memory_node_users_users_memory_node_users",
+				Columns:    []*schema.Column{MemoryNodeUsersColumns[2]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "memorynodeuser_memory_node_id_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{MemoryNodeUsersColumns[1], MemoryNodeUsersColumns[2]},
+			},
+			{
+				Name:    "memorynodeuser_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{MemoryNodeUsersColumns[2]},
+			},
+			{
+				Name:    "memorynodeuser_memory_node_id",
+				Unique:  false,
+				Columns: []*schema.Column{MemoryNodeUsersColumns[1]},
 			},
 		},
 	}
@@ -178,7 +308,10 @@ var (
 	Tables = []*schema.Table{
 		CardsTable,
 		CardItemsTable,
+		CardUsersTable,
+		CardUserCountsTable,
 		MemoryNodesTable,
+		MemoryNodeUsersTable,
 		RefreshTokensTable,
 		UsersTable,
 	}
@@ -193,9 +326,24 @@ func init() {
 	CardItemsTable.Annotation = &entsql.Annotation{
 		Table: "card_items",
 	}
+	CardUsersTable.ForeignKeys[0].RefTable = CardsTable
+	CardUsersTable.ForeignKeys[1].RefTable = UsersTable
+	CardUsersTable.Annotation = &entsql.Annotation{
+		Table: "card_users",
+	}
+	CardUserCountsTable.ForeignKeys[0].RefTable = CardsTable
+	CardUserCountsTable.ForeignKeys[1].RefTable = UsersTable
+	CardUserCountsTable.Annotation = &entsql.Annotation{
+		Table: "card_user_counts",
+	}
 	MemoryNodesTable.ForeignKeys[0].RefTable = UsersTable
 	MemoryNodesTable.Annotation = &entsql.Annotation{
 		Table: "memory_nodes",
+	}
+	MemoryNodeUsersTable.ForeignKeys[0].RefTable = MemoryNodesTable
+	MemoryNodeUsersTable.ForeignKeys[1].RefTable = UsersTable
+	MemoryNodeUsersTable.Annotation = &entsql.Annotation{
+		Table: "memory_node_users",
 	}
 	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
 	RefreshTokensTable.Annotation = &entsql.Annotation{

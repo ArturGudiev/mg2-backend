@@ -10,16 +10,19 @@ import (
 
 // App holds all application dependencies.
 type App struct {
-	Client                   *ent.Client
-	UsersRepository          *repositories.UsersRepository
-	RefreshTokensRepository  *repositories.RefreshTokensRepository
-	MemoryNodesRepository    *repositories.MemoryNodesRepository
-	CardsRepository          *repositories.CardsRepository
-	CardItemsRepository      *repositories.CardItemsRepository
-	MemoryNodesService       *services.MemoryNodesService
-	CardsService             *services.CardsService
-	CardItemsService         *services.CardItemsService
-	ctx                      context.Context
+	Client                    *ent.Client
+	UsersRepository           *repositories.UsersRepository
+	RefreshTokensRepository   *repositories.RefreshTokensRepository
+	MemoryNodesRepository     *repositories.MemoryNodesRepository
+	CardsRepository           *repositories.CardsRepository
+	CardItemsRepository       *repositories.CardItemsRepository
+	CardUserCountsRepository  *repositories.CardUserCountsRepository
+	CardUsersRepository       *repositories.CardUsersRepository
+	MemoryNodeUsersRepository *repositories.MemoryNodeUsersRepository
+	MemoryNodesService        *services.MemoryNodesService
+	CardsService              *services.CardsService
+	CardItemsService          *services.CardItemsService
+	ctx                       context.Context
 }
 
 // NewApp creates a new App instance with all dependencies initialized using Wire.

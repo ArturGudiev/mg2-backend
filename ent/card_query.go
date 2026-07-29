@@ -4,9 +4,12 @@ package ent
 
 import (
 	"arturgudiev/memoryguard/ent/card"
+	"arturgudiev/memoryguard/ent/carduser"
+	"arturgudiev/memoryguard/ent/cardusercount"
 	"arturgudiev/memoryguard/ent/predicate"
 	"arturgudiev/memoryguard/ent/user"
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -19,11 +22,13 @@ import (
 // CardQuery is the builder for querying Card entities.
 type CardQuery struct {
 	config
-	ctx        *QueryContext
-	order      []card.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Card
-	withUser   *UserQuery
+	ctx            *QueryContext
+	order          []card.OrderOption
+	inters         []Interceptor
+	predicates     []predicate.Card
+	withUser       *UserQuery
+	withUserCounts *CardUserCountQuery
+	withCardUsers  *CardUserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,6 +80,50 @@ func (_q *CardQuery) QueryUser() *UserQuery {
 			sqlgraph.From(card.Table, card.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, card.UserTable, card.UserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserCounts chains the current query on the "user_counts" edge.
+func (_q *CardQuery) QueryUserCounts() *CardUserCountQuery {
+	query := (&CardUserCountClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(card.Table, card.FieldID, selector),
+			sqlgraph.To(cardusercount.Table, cardusercount.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, card.UserCountsTable, card.UserCountsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCardUsers chains the current query on the "card_users" edge.
+func (_q *CardQuery) QueryCardUsers() *CardUserQuery {
+	query := (&CardUserClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(card.Table, card.FieldID, selector),
+			sqlgraph.To(carduser.Table, carduser.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, card.CardUsersTable, card.CardUsersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -269,12 +318,14 @@ func (_q *CardQuery) Clone() *CardQuery {
 		return nil
 	}
 	return &CardQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]card.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Card{}, _q.predicates...),
-		withUser:   _q.withUser.Clone(),
+		config:         _q.config,
+		ctx:            _q.ctx.Clone(),
+		order:          append([]card.OrderOption{}, _q.order...),
+		inters:         append([]Interceptor{}, _q.inters...),
+		predicates:     append([]predicate.Card{}, _q.predicates...),
+		withUser:       _q.withUser.Clone(),
+		withUserCounts: _q.withUserCounts.Clone(),
+		withCardUsers:  _q.withCardUsers.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -289,6 +340,28 @@ func (_q *CardQuery) WithUser(opts ...func(*UserQuery)) *CardQuery {
 		opt(query)
 	}
 	_q.withUser = query
+	return _q
+}
+
+// WithUserCounts tells the query-builder to eager-load the nodes that are connected to
+// the "user_counts" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *CardQuery) WithUserCounts(opts ...func(*CardUserCountQuery)) *CardQuery {
+	query := (&CardUserCountClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUserCounts = query
+	return _q
+}
+
+// WithCardUsers tells the query-builder to eager-load the nodes that are connected to
+// the "card_users" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *CardQuery) WithCardUsers(opts ...func(*CardUserQuery)) *CardQuery {
+	query := (&CardUserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withCardUsers = query
 	return _q
 }
 
@@ -370,8 +443,10 @@ func (_q *CardQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Card, e
 	var (
 		nodes       = []*Card{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [3]bool{
 			_q.withUser != nil,
+			_q.withUserCounts != nil,
+			_q.withCardUsers != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -395,6 +470,20 @@ func (_q *CardQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Card, e
 	if query := _q.withUser; query != nil {
 		if err := _q.loadUser(ctx, query, nodes, nil,
 			func(n *Card, e *User) { n.Edges.User = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUserCounts; query != nil {
+		if err := _q.loadUserCounts(ctx, query, nodes,
+			func(n *Card) { n.Edges.UserCounts = []*CardUserCount{} },
+			func(n *Card, e *CardUserCount) { n.Edges.UserCounts = append(n.Edges.UserCounts, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withCardUsers; query != nil {
+		if err := _q.loadCardUsers(ctx, query, nodes,
+			func(n *Card) { n.Edges.CardUsers = []*CardUser{} },
+			func(n *Card, e *CardUser) { n.Edges.CardUsers = append(n.Edges.CardUsers, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -427,6 +516,66 @@ func (_q *CardQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Ca
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (_q *CardQuery) loadUserCounts(ctx context.Context, query *CardUserCountQuery, nodes []*Card, init func(*Card), assign func(*Card, *CardUserCount)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Card)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(cardusercount.FieldCardID)
+	}
+	query.Where(predicate.CardUserCount(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(card.UserCountsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CardID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "card_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *CardQuery) loadCardUsers(ctx context.Context, query *CardUserQuery, nodes []*Card, init func(*Card), assign func(*Card, *CardUser)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Card)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(carduser.FieldCardID)
+	}
+	query.Where(predicate.CardUser(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(card.CardUsersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CardID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "card_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

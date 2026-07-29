@@ -12,24 +12,30 @@ import (
 )
 
 type CardsService struct {
-	cardsRepo      *repositories.CardsRepository
-	cardItemsSvc   *CardItemsService
-	memoryNodesSvc *MemoryNodesService
+	cardsRepo          *repositories.CardsRepository
+	cardItemsSvc       *CardItemsService
+	memoryNodesSvc     *MemoryNodesService
+	cardUserCountsRepo *repositories.CardUserCountsRepository
+	cardUsersRepo      *repositories.CardUsersRepository
 }
 
 func NewCardsService(
 	cardsRepo *repositories.CardsRepository,
 	cardItemsSvc *CardItemsService,
 	memoryNodesSvc *MemoryNodesService,
+	cardUserCountsRepo *repositories.CardUserCountsRepository,
+	cardUsersRepo *repositories.CardUsersRepository,
 ) *CardsService {
 	return &CardsService{
-		cardsRepo:      cardsRepo,
-		cardItemsSvc:   cardItemsSvc,
-		memoryNodesSvc: memoryNodesSvc,
+		cardsRepo:          cardsRepo,
+		cardItemsSvc:       cardItemsSvc,
+		memoryNodesSvc:     memoryNodesSvc,
+		cardUserCountsRepo: cardUserCountsRepo,
+		cardUsersRepo:      cardUsersRepo,
 	}
 }
 
-func (s *CardsService) toFull(ctx context.Context, c *ent.Card, userID int) (*models.CardFull, error) {
+func (s *CardsService) toFull(ctx context.Context, c *ent.Card, userID int, perUserCounts map[int]int) (*models.CardFull, error) {
 	question, err := s.cardItemsSvc.GetByIDs(ctx, c.Question, userID)
 	if err != nil {
 		return nil, err
@@ -56,21 +62,42 @@ func (s *CardsService) toFull(ctx context.Context, c *ent.Card, userID int) (*mo
 	if answer == nil {
 		answer = []models.CardItemFull{}
 	}
+	count := c.Count
+	if c.Shared {
+		if perUserCounts != nil {
+			count = perUserCounts[c.ID]
+		} else {
+			count = 0
+		}
+	}
 	return &models.CardFull{
-		ID:            c.ID,
-		Question:      question,
-		Answer:        answer,
-		QuestionIDs:   questionIDs,
-		AnswerIDs:     answerIDs,
-		ParentNodes:   parentNodes,
-		Used:          c.Used,
-		Needed:        c.Needed,
-		Count:        c.Count,
+		ID:           c.ID,
+		Question:     question,
+		Answer:       answer,
+		QuestionIDs:  questionIDs,
+		AnswerIDs:    answerIDs,
+		ParentNodes:  parentNodes,
+		Used:         c.Used,
+		Needed:       c.Needed,
+		Count:        count,
 		ReverseCount: c.ReverseCount,
 		UsageType:    c.UsageType,
-		Shared:        c.Shared,
-		UserID:        c.UserID,
+		Shared:       c.Shared,
+		UserID:       c.UserID,
 	}, nil
+}
+
+func (s *CardsService) loadPerUserCounts(ctx context.Context, cards []*ent.Card, userID int) (map[int]int, error) {
+	sharedIDs := make([]int, 0)
+	for _, c := range cards {
+		if c.Shared {
+			sharedIDs = append(sharedIDs, c.ID)
+		}
+	}
+	if len(sharedIDs) == 0 {
+		return map[int]int{}, nil
+	}
+	return s.cardUserCountsRepo.GetCountsByCardIDs(ctx, sharedIDs, userID)
 }
 
 func (s *CardsService) Get(ctx context.Context, id, userID int) (*models.CardFull, error) {
@@ -78,7 +105,11 @@ func (s *CardsService) Get(ctx context.Context, id, userID int) (*models.CardFul
 	if err != nil {
 		return nil, err
 	}
-	return s.toFull(ctx, c, userID)
+	counts, err := s.loadPerUserCounts(ctx, []*ent.Card{c}, userID)
+	if err != nil {
+		return nil, err
+	}
+	return s.toFull(ctx, c, userID, counts)
 }
 
 func (s *CardsService) GetByIDs(ctx context.Context, ids []int, userID int) ([]*models.CardFull, error) {
@@ -86,9 +117,21 @@ func (s *CardsService) GetByIDs(ctx context.Context, ids []int, userID int) ([]*
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*models.CardFull, 0, len(cards))
+	counts, err := s.loadPerUserCounts(ctx, cards, userID)
+	if err != nil {
+		return nil, err
+	}
+	byID := make(map[int]*ent.Card, len(cards))
 	for _, c := range cards {
-		full, err := s.toFull(ctx, c, userID)
+		byID[c.ID] = c
+	}
+	result := make([]*models.CardFull, 0, len(ids))
+	for _, id := range ids {
+		c, ok := byID[id]
+		if !ok {
+			continue
+		}
+		full, err := s.toFull(ctx, c, userID, counts)
 		if err != nil {
 			return nil, err
 		}
@@ -230,25 +273,41 @@ func (s *CardsService) DeleteMany(ctx context.Context, ids []int, userID int) er
 	return nil
 }
 
+func (s *CardsService) touchSharedCard(ctx context.Context, card *ent.Card, userID int) error {
+	if !card.Shared {
+		return nil
+	}
+	return s.cardUsersRepo.EnsureLink(ctx, card.ID, userID)
+}
+
 func (s *CardsService) UpdateField(ctx context.Context, req models.UpdateCardsFieldRequest, userID int) error {
 	field := strings.TrimSpace(req.Field)
 	for _, item := range req.Cards {
-		partial := models.CardPartial{ID: item.ResolvedID()}
-		if partial.ID <= 0 {
+		id := item.ResolvedID()
+		if id <= 0 {
 			return fmt.Errorf("card id is required")
 		}
-		if _, err := s.cardsRepo.GetForUser(ctx, partial.ID, userID); err != nil {
+		card, err := s.cardsRepo.GetForUser(ctx, id, userID)
+		if err != nil {
 			return err
 		}
 		switch field {
 		case "count":
+			if card.Shared {
+				if err := s.touchSharedCard(ctx, card, userID); err != nil {
+					return err
+				}
+				if _, err := s.cardUserCountsRepo.SetCount(ctx, id, userID, item.Count); err != nil {
+					return err
+				}
+				continue
+			}
 			count := item.Count
-			partial.Count = &count
+			if _, err := s.cardsRepo.Update(ctx, models.CardPartial{ID: id, Count: &count}); err != nil {
+				return err
+			}
 		default:
 			return fmt.Errorf("unsupported field: %s", field)
-		}
-		if _, err := s.cardsRepo.Update(ctx, partial); err != nil {
-			return err
 		}
 	}
 	return nil
@@ -284,21 +343,41 @@ func (s *CardsService) CardsByQuery(ctx context.Context, req models.CardsByQuery
 }
 
 func (s *CardsService) IncrementCount(ctx context.Context, id, userID int) (*models.CardFull, error) {
-	if _, err := s.cardsRepo.GetForUser(ctx, id, userID); err != nil {
+	card, err := s.cardsRepo.GetForUser(ctx, id, userID)
+	if err != nil {
 		return nil, err
 	}
-	if _, err := s.cardsRepo.IncrementCount(ctx, id); err != nil {
-		return nil, err
+	if card.Shared {
+		if err := s.touchSharedCard(ctx, card, userID); err != nil {
+			return nil, err
+		}
+		if _, err := s.cardUserCountsRepo.Increment(ctx, id, userID); err != nil {
+			return nil, err
+		}
+	} else {
+		if _, err := s.cardsRepo.IncrementCount(ctx, id); err != nil {
+			return nil, err
+		}
 	}
 	return s.Get(ctx, id, userID)
 }
 
 func (s *CardsService) DecrementCount(ctx context.Context, id, userID int) (*models.CardFull, error) {
-	if _, err := s.cardsRepo.GetForUser(ctx, id, userID); err != nil {
+	card, err := s.cardsRepo.GetForUser(ctx, id, userID)
+	if err != nil {
 		return nil, err
 	}
-	if _, err := s.cardsRepo.DecrementCount(ctx, id); err != nil {
-		return nil, err
+	if card.Shared {
+		if err := s.touchSharedCard(ctx, card, userID); err != nil {
+			return nil, err
+		}
+		if _, err := s.cardUserCountsRepo.Decrement(ctx, id, userID); err != nil {
+			return nil, err
+		}
+	} else {
+		if _, err := s.cardsRepo.DecrementCount(ctx, id); err != nil {
+			return nil, err
+		}
 	}
 	return s.Get(ctx, id, userID)
 }

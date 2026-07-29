@@ -47,9 +47,11 @@ type MemoryNode struct {
 type MemoryNodeEdges struct {
 	// User holds the value of the user edge.
 	User *User `json:"user,omitempty"`
+	// MemoryNodeUsers holds the value of the memory_node_users edge.
+	MemoryNodeUsers []*MemoryNodeUser `json:"memory_node_users,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -61,6 +63,15 @@ func (e MemoryNodeEdges) UserOrErr() (*User, error) {
 		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "user"}
+}
+
+// MemoryNodeUsersOrErr returns the MemoryNodeUsers value or an error if the edge
+// was not loaded in eager-loading.
+func (e MemoryNodeEdges) MemoryNodeUsersOrErr() ([]*MemoryNodeUser, error) {
+	if e.loadedTypes[1] {
+		return e.MemoryNodeUsers, nil
+	}
+	return nil, &NotLoadedError{edge: "memory_node_users"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -179,6 +190,11 @@ func (_m *MemoryNode) Value(name string) (ent.Value, error) {
 // QueryUser queries the "user" edge of the MemoryNode entity.
 func (_m *MemoryNode) QueryUser() *UserQuery {
 	return NewMemoryNodeClient(_m.config).QueryUser(_m)
+}
+
+// QueryMemoryNodeUsers queries the "memory_node_users" edge of the MemoryNode entity.
+func (_m *MemoryNode) QueryMemoryNodeUsers() *MemoryNodeUserQuery {
+	return NewMemoryNodeClient(_m.config).QueryMemoryNodeUsers(_m)
 }
 
 // Update returns a builder for updating this MemoryNode.

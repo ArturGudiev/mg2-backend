@@ -16,8 +16,14 @@ type Tx struct {
 	Card *CardClient
 	// CardItem is the client for interacting with the CardItem builders.
 	CardItem *CardItemClient
+	// CardUser is the client for interacting with the CardUser builders.
+	CardUser *CardUserClient
+	// CardUserCount is the client for interacting with the CardUserCount builders.
+	CardUserCount *CardUserCountClient
 	// MemoryNode is the client for interacting with the MemoryNode builders.
 	MemoryNode *MemoryNodeClient
+	// MemoryNodeUser is the client for interacting with the MemoryNodeUser builders.
+	MemoryNodeUser *MemoryNodeUserClient
 	// RefreshToken is the client for interacting with the RefreshToken builders.
 	RefreshToken *RefreshTokenClient
 	// User is the client for interacting with the User builders.
@@ -155,7 +161,10 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Card = NewCardClient(tx.config)
 	tx.CardItem = NewCardItemClient(tx.config)
+	tx.CardUser = NewCardUserClient(tx.config)
+	tx.CardUserCount = NewCardUserCountClient(tx.config)
 	tx.MemoryNode = NewMemoryNodeClient(tx.config)
+	tx.MemoryNodeUser = NewMemoryNodeUserClient(tx.config)
 	tx.RefreshToken = NewRefreshTokenClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }

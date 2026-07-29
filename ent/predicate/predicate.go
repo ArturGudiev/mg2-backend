@@ -12,8 +12,17 @@ type Card func(*sql.Selector)
 // CardItem is the predicate function for carditem builders.
 type CardItem func(*sql.Selector)
 
+// CardUser is the predicate function for carduser builders.
+type CardUser func(*sql.Selector)
+
+// CardUserCount is the predicate function for cardusercount builders.
+type CardUserCount func(*sql.Selector)
+
 // MemoryNode is the predicate function for memorynode builders.
 type MemoryNode func(*sql.Selector)
+
+// MemoryNodeUser is the predicate function for memorynodeuser builders.
+type MemoryNodeUser func(*sql.Selector)
 
 // RefreshToken is the predicate function for refreshtoken builders.
 type RefreshToken func(*sql.Selector)

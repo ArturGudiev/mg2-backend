@@ -4,6 +4,7 @@ package ent
 
 import (
 	"arturgudiev/memoryguard/ent/memorynode"
+	"arturgudiev/memoryguard/ent/memorynodeuser"
 	"arturgudiev/memoryguard/ent/predicate"
 	"arturgudiev/memoryguard/ent/schema"
 	"arturgudiev/memoryguard/ent/user"
@@ -161,6 +162,21 @@ func (_u *MemoryNodeUpdate) SetUser(v *User) *MemoryNodeUpdate {
 	return _u.SetUserID(v.ID)
 }
 
+// AddMemoryNodeUserIDs adds the "memory_node_users" edge to the MemoryNodeUser entity by IDs.
+func (_u *MemoryNodeUpdate) AddMemoryNodeUserIDs(ids ...int) *MemoryNodeUpdate {
+	_u.mutation.AddMemoryNodeUserIDs(ids...)
+	return _u
+}
+
+// AddMemoryNodeUsers adds the "memory_node_users" edges to the MemoryNodeUser entity.
+func (_u *MemoryNodeUpdate) AddMemoryNodeUsers(v ...*MemoryNodeUser) *MemoryNodeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMemoryNodeUserIDs(ids...)
+}
+
 // Mutation returns the MemoryNodeMutation object of the builder.
 func (_u *MemoryNodeUpdate) Mutation() *MemoryNodeMutation {
 	return _u.mutation
@@ -170,6 +186,27 @@ func (_u *MemoryNodeUpdate) Mutation() *MemoryNodeMutation {
 func (_u *MemoryNodeUpdate) ClearUser() *MemoryNodeUpdate {
 	_u.mutation.ClearUser()
 	return _u
+}
+
+// ClearMemoryNodeUsers clears all "memory_node_users" edges to the MemoryNodeUser entity.
+func (_u *MemoryNodeUpdate) ClearMemoryNodeUsers() *MemoryNodeUpdate {
+	_u.mutation.ClearMemoryNodeUsers()
+	return _u
+}
+
+// RemoveMemoryNodeUserIDs removes the "memory_node_users" edge to MemoryNodeUser entities by IDs.
+func (_u *MemoryNodeUpdate) RemoveMemoryNodeUserIDs(ids ...int) *MemoryNodeUpdate {
+	_u.mutation.RemoveMemoryNodeUserIDs(ids...)
+	return _u
+}
+
+// RemoveMemoryNodeUsers removes "memory_node_users" edges to MemoryNodeUser entities.
+func (_u *MemoryNodeUpdate) RemoveMemoryNodeUsers(v ...*MemoryNodeUser) *MemoryNodeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMemoryNodeUserIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -311,6 +348,51 @@ func (_u *MemoryNodeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MemoryNodeUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   memorynode.MemoryNodeUsersTable,
+			Columns: []string{memorynode.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMemoryNodeUsersIDs(); len(nodes) > 0 && !_u.mutation.MemoryNodeUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   memorynode.MemoryNodeUsersTable,
+			Columns: []string{memorynode.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MemoryNodeUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   memorynode.MemoryNodeUsersTable,
+			Columns: []string{memorynode.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -469,6 +551,21 @@ func (_u *MemoryNodeUpdateOne) SetUser(v *User) *MemoryNodeUpdateOne {
 	return _u.SetUserID(v.ID)
 }
 
+// AddMemoryNodeUserIDs adds the "memory_node_users" edge to the MemoryNodeUser entity by IDs.
+func (_u *MemoryNodeUpdateOne) AddMemoryNodeUserIDs(ids ...int) *MemoryNodeUpdateOne {
+	_u.mutation.AddMemoryNodeUserIDs(ids...)
+	return _u
+}
+
+// AddMemoryNodeUsers adds the "memory_node_users" edges to the MemoryNodeUser entity.
+func (_u *MemoryNodeUpdateOne) AddMemoryNodeUsers(v ...*MemoryNodeUser) *MemoryNodeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMemoryNodeUserIDs(ids...)
+}
+
 // Mutation returns the MemoryNodeMutation object of the builder.
 func (_u *MemoryNodeUpdateOne) Mutation() *MemoryNodeMutation {
 	return _u.mutation
@@ -478,6 +575,27 @@ func (_u *MemoryNodeUpdateOne) Mutation() *MemoryNodeMutation {
 func (_u *MemoryNodeUpdateOne) ClearUser() *MemoryNodeUpdateOne {
 	_u.mutation.ClearUser()
 	return _u
+}
+
+// ClearMemoryNodeUsers clears all "memory_node_users" edges to the MemoryNodeUser entity.
+func (_u *MemoryNodeUpdateOne) ClearMemoryNodeUsers() *MemoryNodeUpdateOne {
+	_u.mutation.ClearMemoryNodeUsers()
+	return _u
+}
+
+// RemoveMemoryNodeUserIDs removes the "memory_node_users" edge to MemoryNodeUser entities by IDs.
+func (_u *MemoryNodeUpdateOne) RemoveMemoryNodeUserIDs(ids ...int) *MemoryNodeUpdateOne {
+	_u.mutation.RemoveMemoryNodeUserIDs(ids...)
+	return _u
+}
+
+// RemoveMemoryNodeUsers removes "memory_node_users" edges to MemoryNodeUser entities.
+func (_u *MemoryNodeUpdateOne) RemoveMemoryNodeUsers(v ...*MemoryNodeUser) *MemoryNodeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMemoryNodeUserIDs(ids...)
 }
 
 // Where appends a list predicates to the MemoryNodeUpdate builder.
@@ -649,6 +767,51 @@ func (_u *MemoryNodeUpdateOne) sqlSave(ctx context.Context) (_node *MemoryNode, 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MemoryNodeUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   memorynode.MemoryNodeUsersTable,
+			Columns: []string{memorynode.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMemoryNodeUsersIDs(); len(nodes) > 0 && !_u.mutation.MemoryNodeUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   memorynode.MemoryNodeUsersTable,
+			Columns: []string{memorynode.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MemoryNodeUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   memorynode.MemoryNodeUsersTable,
+			Columns: []string{memorynode.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

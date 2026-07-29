@@ -36,10 +36,13 @@ func InitializeApp() (*App, error) {
 	memoryNodesRepository := repositories.NewMemoryNodesRepository(client)
 	cardsRepository := repositories.NewCardsRepository(client)
 	cardItemsRepository := repositories.NewCardItemsRepository(client)
-	memoryNodesService := services.NewMemoryNodesService(memoryNodesRepository)
+	cardUserCountsRepository := repositories.NewCardUserCountsRepository(client)
+	cardUsersRepository := repositories.NewCardUsersRepository(client)
+	memoryNodeUsersRepository := repositories.NewMemoryNodeUsersRepository(client)
+	memoryNodesService := services.NewMemoryNodesService(memoryNodesRepository, memoryNodeUsersRepository)
 	cardItemsService := services.NewCardItemsService(cardItemsRepository)
-	cardsService := services.NewCardsService(cardsRepository, cardItemsService, memoryNodesService)
-	app := provideApp(client, usersRepository, refreshTokensRepository, memoryNodesRepository, cardsRepository, cardItemsRepository, memoryNodesService, cardsService, cardItemsService)
+	cardsService := services.NewCardsService(cardsRepository, cardItemsService, memoryNodesService, cardUserCountsRepository, cardUsersRepository)
+	app := provideApp(client, usersRepository, refreshTokensRepository, memoryNodesRepository, cardsRepository, cardItemsRepository, cardUserCountsRepository, cardUsersRepository, memoryNodeUsersRepository, memoryNodesService, cardsService, cardItemsService)
 	return app, nil
 }
 
@@ -113,20 +116,26 @@ func provideApp(
 	memoryNodesRepository *repositories.MemoryNodesRepository,
 	cardsRepository *repositories.CardsRepository,
 	cardItemsRepository *repositories.CardItemsRepository,
+	cardUserCountsRepository *repositories.CardUserCountsRepository,
+	cardUsersRepository *repositories.CardUsersRepository,
+	memoryNodeUsersRepository *repositories.MemoryNodeUsersRepository,
 	memoryNodesService *services.MemoryNodesService,
 	cardsService *services.CardsService,
 	cardItemsService *services.CardItemsService,
 ) *App {
 	return &App{
-		Client:                  client,
-		UsersRepository:         usersRepository,
-		RefreshTokensRepository: refreshTokensRepository,
-		MemoryNodesRepository:   memoryNodesRepository,
-		CardsRepository:         cardsRepository,
-		CardItemsRepository:     cardItemsRepository,
-		MemoryNodesService:      memoryNodesService,
-		CardsService:            cardsService,
-		CardItemsService:        cardItemsService,
-		ctx:                     context.Background(),
+		Client:                    client,
+		UsersRepository:           usersRepository,
+		RefreshTokensRepository:   refreshTokensRepository,
+		MemoryNodesRepository:     memoryNodesRepository,
+		CardsRepository:           cardsRepository,
+		CardItemsRepository:       cardItemsRepository,
+		CardUserCountsRepository:  cardUserCountsRepository,
+		CardUsersRepository:       cardUsersRepository,
+		MemoryNodeUsersRepository: memoryNodeUsersRepository,
+		MemoryNodesService:        memoryNodesService,
+		CardsService:              cardsService,
+		CardItemsService:          cardItemsService,
+		ctx:                       context.Background(),
 	}
 }

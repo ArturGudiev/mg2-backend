@@ -31,6 +31,12 @@ const (
 	EdgeCards = "cards"
 	// EdgeCardItems holds the string denoting the card_items edge name in mutations.
 	EdgeCardItems = "card_items"
+	// EdgeCardUserCounts holds the string denoting the card_user_counts edge name in mutations.
+	EdgeCardUserCounts = "card_user_counts"
+	// EdgeCardUsers holds the string denoting the card_users edge name in mutations.
+	EdgeCardUsers = "card_users"
+	// EdgeMemoryNodeUsers holds the string denoting the memory_node_users edge name in mutations.
+	EdgeMemoryNodeUsers = "memory_node_users"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// RefreshTokensTable is the table that holds the refresh_tokens relation/edge.
@@ -61,6 +67,27 @@ const (
 	CardItemsInverseTable = "card_items"
 	// CardItemsColumn is the table column denoting the card_items relation/edge.
 	CardItemsColumn = "user_id"
+	// CardUserCountsTable is the table that holds the card_user_counts relation/edge.
+	CardUserCountsTable = "card_user_counts"
+	// CardUserCountsInverseTable is the table name for the CardUserCount entity.
+	// It exists in this package in order to avoid circular dependency with the "cardusercount" package.
+	CardUserCountsInverseTable = "card_user_counts"
+	// CardUserCountsColumn is the table column denoting the card_user_counts relation/edge.
+	CardUserCountsColumn = "user_id"
+	// CardUsersTable is the table that holds the card_users relation/edge.
+	CardUsersTable = "card_users"
+	// CardUsersInverseTable is the table name for the CardUser entity.
+	// It exists in this package in order to avoid circular dependency with the "carduser" package.
+	CardUsersInverseTable = "card_users"
+	// CardUsersColumn is the table column denoting the card_users relation/edge.
+	CardUsersColumn = "user_id"
+	// MemoryNodeUsersTable is the table that holds the memory_node_users relation/edge.
+	MemoryNodeUsersTable = "memory_node_users"
+	// MemoryNodeUsersInverseTable is the table name for the MemoryNodeUser entity.
+	// It exists in this package in order to avoid circular dependency with the "memorynodeuser" package.
+	MemoryNodeUsersInverseTable = "memory_node_users"
+	// MemoryNodeUsersColumn is the table column denoting the memory_node_users relation/edge.
+	MemoryNodeUsersColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -188,6 +215,48 @@ func ByCardItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCardItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByCardUserCountsCount orders the results by card_user_counts count.
+func ByCardUserCountsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCardUserCountsStep(), opts...)
+	}
+}
+
+// ByCardUserCounts orders the results by card_user_counts terms.
+func ByCardUserCounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCardUserCountsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCardUsersCount orders the results by card_users count.
+func ByCardUsersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCardUsersStep(), opts...)
+	}
+}
+
+// ByCardUsers orders the results by card_users terms.
+func ByCardUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCardUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByMemoryNodeUsersCount orders the results by memory_node_users count.
+func ByMemoryNodeUsersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMemoryNodeUsersStep(), opts...)
+	}
+}
+
+// ByMemoryNodeUsers orders the results by memory_node_users terms.
+func ByMemoryNodeUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMemoryNodeUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRefreshTokensStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -214,5 +283,26 @@ func newCardItemsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CardItemsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CardItemsTable, CardItemsColumn),
+	)
+}
+func newCardUserCountsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CardUserCountsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CardUserCountsTable, CardUserCountsColumn),
+	)
+}
+func newCardUsersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CardUsersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CardUsersTable, CardUsersColumn),
+	)
+}
+func newMemoryNodeUsersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MemoryNodeUsersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MemoryNodeUsersTable, MemoryNodeUsersColumn),
 	)
 }

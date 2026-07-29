@@ -4,6 +4,7 @@ package ent
 
 import (
 	"arturgudiev/memoryguard/ent/memorynode"
+	"arturgudiev/memoryguard/ent/memorynodeuser"
 	"arturgudiev/memoryguard/ent/schema"
 	"arturgudiev/memoryguard/ent/user"
 	"context"
@@ -92,6 +93,21 @@ func (_c *MemoryNodeCreate) SetID(v int) *MemoryNodeCreate {
 // SetUser sets the "user" edge to the User entity.
 func (_c *MemoryNodeCreate) SetUser(v *User) *MemoryNodeCreate {
 	return _c.SetUserID(v.ID)
+}
+
+// AddMemoryNodeUserIDs adds the "memory_node_users" edge to the MemoryNodeUser entity by IDs.
+func (_c *MemoryNodeCreate) AddMemoryNodeUserIDs(ids ...int) *MemoryNodeCreate {
+	_c.mutation.AddMemoryNodeUserIDs(ids...)
+	return _c
+}
+
+// AddMemoryNodeUsers adds the "memory_node_users" edges to the MemoryNodeUser entity.
+func (_c *MemoryNodeCreate) AddMemoryNodeUsers(v ...*MemoryNodeUser) *MemoryNodeCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMemoryNodeUserIDs(ids...)
 }
 
 // Mutation returns the MemoryNodeMutation object of the builder.
@@ -271,6 +287,22 @@ func (_c *MemoryNodeCreate) createSpec() (*MemoryNode, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.UserID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MemoryNodeUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   memorynode.MemoryNodeUsersTable,
+			Columns: []string{memorynode.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

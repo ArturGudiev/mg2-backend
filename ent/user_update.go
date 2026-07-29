@@ -5,7 +5,10 @@ package ent
 import (
 	"arturgudiev/memoryguard/ent/card"
 	"arturgudiev/memoryguard/ent/carditem"
+	"arturgudiev/memoryguard/ent/carduser"
+	"arturgudiev/memoryguard/ent/cardusercount"
 	"arturgudiev/memoryguard/ent/memorynode"
+	"arturgudiev/memoryguard/ent/memorynodeuser"
 	"arturgudiev/memoryguard/ent/predicate"
 	"arturgudiev/memoryguard/ent/refreshtoken"
 	"arturgudiev/memoryguard/ent/schema"
@@ -148,6 +151,51 @@ func (_u *UserUpdate) AddCardItems(v ...*CardItem) *UserUpdate {
 	return _u.AddCardItemIDs(ids...)
 }
 
+// AddCardUserCountIDs adds the "card_user_counts" edge to the CardUserCount entity by IDs.
+func (_u *UserUpdate) AddCardUserCountIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddCardUserCountIDs(ids...)
+	return _u
+}
+
+// AddCardUserCounts adds the "card_user_counts" edges to the CardUserCount entity.
+func (_u *UserUpdate) AddCardUserCounts(v ...*CardUserCount) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCardUserCountIDs(ids...)
+}
+
+// AddCardUserIDs adds the "card_users" edge to the CardUser entity by IDs.
+func (_u *UserUpdate) AddCardUserIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddCardUserIDs(ids...)
+	return _u
+}
+
+// AddCardUsers adds the "card_users" edges to the CardUser entity.
+func (_u *UserUpdate) AddCardUsers(v ...*CardUser) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCardUserIDs(ids...)
+}
+
+// AddMemoryNodeUserIDs adds the "memory_node_users" edge to the MemoryNodeUser entity by IDs.
+func (_u *UserUpdate) AddMemoryNodeUserIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddMemoryNodeUserIDs(ids...)
+	return _u
+}
+
+// AddMemoryNodeUsers adds the "memory_node_users" edges to the MemoryNodeUser entity.
+func (_u *UserUpdate) AddMemoryNodeUsers(v ...*MemoryNodeUser) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMemoryNodeUserIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -235,6 +283,69 @@ func (_u *UserUpdate) RemoveCardItems(v ...*CardItem) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveCardItemIDs(ids...)
+}
+
+// ClearCardUserCounts clears all "card_user_counts" edges to the CardUserCount entity.
+func (_u *UserUpdate) ClearCardUserCounts() *UserUpdate {
+	_u.mutation.ClearCardUserCounts()
+	return _u
+}
+
+// RemoveCardUserCountIDs removes the "card_user_counts" edge to CardUserCount entities by IDs.
+func (_u *UserUpdate) RemoveCardUserCountIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveCardUserCountIDs(ids...)
+	return _u
+}
+
+// RemoveCardUserCounts removes "card_user_counts" edges to CardUserCount entities.
+func (_u *UserUpdate) RemoveCardUserCounts(v ...*CardUserCount) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCardUserCountIDs(ids...)
+}
+
+// ClearCardUsers clears all "card_users" edges to the CardUser entity.
+func (_u *UserUpdate) ClearCardUsers() *UserUpdate {
+	_u.mutation.ClearCardUsers()
+	return _u
+}
+
+// RemoveCardUserIDs removes the "card_users" edge to CardUser entities by IDs.
+func (_u *UserUpdate) RemoveCardUserIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveCardUserIDs(ids...)
+	return _u
+}
+
+// RemoveCardUsers removes "card_users" edges to CardUser entities.
+func (_u *UserUpdate) RemoveCardUsers(v ...*CardUser) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCardUserIDs(ids...)
+}
+
+// ClearMemoryNodeUsers clears all "memory_node_users" edges to the MemoryNodeUser entity.
+func (_u *UserUpdate) ClearMemoryNodeUsers() *UserUpdate {
+	_u.mutation.ClearMemoryNodeUsers()
+	return _u
+}
+
+// RemoveMemoryNodeUserIDs removes the "memory_node_users" edge to MemoryNodeUser entities by IDs.
+func (_u *UserUpdate) RemoveMemoryNodeUserIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveMemoryNodeUserIDs(ids...)
+	return _u
+}
+
+// RemoveMemoryNodeUsers removes "memory_node_users" edges to MemoryNodeUser entities.
+func (_u *UserUpdate) RemoveMemoryNodeUsers(v ...*MemoryNodeUser) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMemoryNodeUserIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -493,6 +604,141 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.CardUserCountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUserCountsTable,
+			Columns: []string{user.CardUserCountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cardusercount.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCardUserCountsIDs(); len(nodes) > 0 && !_u.mutation.CardUserCountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUserCountsTable,
+			Columns: []string{user.CardUserCountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cardusercount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CardUserCountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUserCountsTable,
+			Columns: []string{user.CardUserCountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cardusercount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CardUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUsersTable,
+			Columns: []string{user.CardUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carduser.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCardUsersIDs(); len(nodes) > 0 && !_u.mutation.CardUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUsersTable,
+			Columns: []string{user.CardUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carduser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CardUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUsersTable,
+			Columns: []string{user.CardUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carduser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MemoryNodeUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MemoryNodeUsersTable,
+			Columns: []string{user.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMemoryNodeUsersIDs(); len(nodes) > 0 && !_u.mutation.MemoryNodeUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MemoryNodeUsersTable,
+			Columns: []string{user.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MemoryNodeUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MemoryNodeUsersTable,
+			Columns: []string{user.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -629,6 +875,51 @@ func (_u *UserUpdateOne) AddCardItems(v ...*CardItem) *UserUpdateOne {
 	return _u.AddCardItemIDs(ids...)
 }
 
+// AddCardUserCountIDs adds the "card_user_counts" edge to the CardUserCount entity by IDs.
+func (_u *UserUpdateOne) AddCardUserCountIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddCardUserCountIDs(ids...)
+	return _u
+}
+
+// AddCardUserCounts adds the "card_user_counts" edges to the CardUserCount entity.
+func (_u *UserUpdateOne) AddCardUserCounts(v ...*CardUserCount) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCardUserCountIDs(ids...)
+}
+
+// AddCardUserIDs adds the "card_users" edge to the CardUser entity by IDs.
+func (_u *UserUpdateOne) AddCardUserIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddCardUserIDs(ids...)
+	return _u
+}
+
+// AddCardUsers adds the "card_users" edges to the CardUser entity.
+func (_u *UserUpdateOne) AddCardUsers(v ...*CardUser) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCardUserIDs(ids...)
+}
+
+// AddMemoryNodeUserIDs adds the "memory_node_users" edge to the MemoryNodeUser entity by IDs.
+func (_u *UserUpdateOne) AddMemoryNodeUserIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddMemoryNodeUserIDs(ids...)
+	return _u
+}
+
+// AddMemoryNodeUsers adds the "memory_node_users" edges to the MemoryNodeUser entity.
+func (_u *UserUpdateOne) AddMemoryNodeUsers(v ...*MemoryNodeUser) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMemoryNodeUserIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -716,6 +1007,69 @@ func (_u *UserUpdateOne) RemoveCardItems(v ...*CardItem) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveCardItemIDs(ids...)
+}
+
+// ClearCardUserCounts clears all "card_user_counts" edges to the CardUserCount entity.
+func (_u *UserUpdateOne) ClearCardUserCounts() *UserUpdateOne {
+	_u.mutation.ClearCardUserCounts()
+	return _u
+}
+
+// RemoveCardUserCountIDs removes the "card_user_counts" edge to CardUserCount entities by IDs.
+func (_u *UserUpdateOne) RemoveCardUserCountIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveCardUserCountIDs(ids...)
+	return _u
+}
+
+// RemoveCardUserCounts removes "card_user_counts" edges to CardUserCount entities.
+func (_u *UserUpdateOne) RemoveCardUserCounts(v ...*CardUserCount) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCardUserCountIDs(ids...)
+}
+
+// ClearCardUsers clears all "card_users" edges to the CardUser entity.
+func (_u *UserUpdateOne) ClearCardUsers() *UserUpdateOne {
+	_u.mutation.ClearCardUsers()
+	return _u
+}
+
+// RemoveCardUserIDs removes the "card_users" edge to CardUser entities by IDs.
+func (_u *UserUpdateOne) RemoveCardUserIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveCardUserIDs(ids...)
+	return _u
+}
+
+// RemoveCardUsers removes "card_users" edges to CardUser entities.
+func (_u *UserUpdateOne) RemoveCardUsers(v ...*CardUser) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCardUserIDs(ids...)
+}
+
+// ClearMemoryNodeUsers clears all "memory_node_users" edges to the MemoryNodeUser entity.
+func (_u *UserUpdateOne) ClearMemoryNodeUsers() *UserUpdateOne {
+	_u.mutation.ClearMemoryNodeUsers()
+	return _u
+}
+
+// RemoveMemoryNodeUserIDs removes the "memory_node_users" edge to MemoryNodeUser entities by IDs.
+func (_u *UserUpdateOne) RemoveMemoryNodeUserIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveMemoryNodeUserIDs(ids...)
+	return _u
+}
+
+// RemoveMemoryNodeUsers removes "memory_node_users" edges to MemoryNodeUser entities.
+func (_u *UserUpdateOne) RemoveMemoryNodeUsers(v ...*MemoryNodeUser) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMemoryNodeUserIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -997,6 +1351,141 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(carditem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CardUserCountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUserCountsTable,
+			Columns: []string{user.CardUserCountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cardusercount.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCardUserCountsIDs(); len(nodes) > 0 && !_u.mutation.CardUserCountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUserCountsTable,
+			Columns: []string{user.CardUserCountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cardusercount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CardUserCountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUserCountsTable,
+			Columns: []string{user.CardUserCountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cardusercount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CardUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUsersTable,
+			Columns: []string{user.CardUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carduser.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCardUsersIDs(); len(nodes) > 0 && !_u.mutation.CardUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUsersTable,
+			Columns: []string{user.CardUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carduser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CardUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CardUsersTable,
+			Columns: []string{user.CardUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carduser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MemoryNodeUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MemoryNodeUsersTable,
+			Columns: []string{user.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMemoryNodeUsersIDs(); len(nodes) > 0 && !_u.mutation.MemoryNodeUsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MemoryNodeUsersTable,
+			Columns: []string{user.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MemoryNodeUsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MemoryNodeUsersTable,
+			Columns: []string{user.MemoryNodeUsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

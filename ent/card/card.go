@@ -37,6 +37,10 @@ const (
 	FieldUserID = "user_id"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
+	// EdgeUserCounts holds the string denoting the user_counts edge name in mutations.
+	EdgeUserCounts = "user_counts"
+	// EdgeCardUsers holds the string denoting the card_users edge name in mutations.
+	EdgeCardUsers = "card_users"
 	// Table holds the table name of the card in the database.
 	Table = "cards"
 	// UserTable is the table that holds the user relation/edge.
@@ -46,6 +50,20 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_id"
+	// UserCountsTable is the table that holds the user_counts relation/edge.
+	UserCountsTable = "card_user_counts"
+	// UserCountsInverseTable is the table name for the CardUserCount entity.
+	// It exists in this package in order to avoid circular dependency with the "cardusercount" package.
+	UserCountsInverseTable = "card_user_counts"
+	// UserCountsColumn is the table column denoting the user_counts relation/edge.
+	UserCountsColumn = "card_id"
+	// CardUsersTable is the table that holds the card_users relation/edge.
+	CardUsersTable = "card_users"
+	// CardUsersInverseTable is the table name for the CardUser entity.
+	// It exists in this package in order to avoid circular dependency with the "carduser" package.
+	CardUsersInverseTable = "card_users"
+	// CardUsersColumn is the table column denoting the card_users relation/edge.
+	CardUsersColumn = "card_id"
 )
 
 // Columns holds all SQL columns for card fields.
@@ -157,10 +175,52 @@ func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByUserCountsCount orders the results by user_counts count.
+func ByUserCountsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserCountsStep(), opts...)
+	}
+}
+
+// ByUserCounts orders the results by user_counts terms.
+func ByUserCounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserCountsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCardUsersCount orders the results by card_users count.
+func ByCardUsersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCardUsersStep(), opts...)
+	}
+}
+
+// ByCardUsers orders the results by card_users terms.
+func ByCardUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCardUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+	)
+}
+func newUserCountsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserCountsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UserCountsTable, UserCountsColumn),
+	)
+}
+func newCardUsersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CardUsersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CardUsersTable, CardUsersColumn),
 	)
 }

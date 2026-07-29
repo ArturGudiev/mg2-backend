@@ -11,11 +11,18 @@ import (
 )
 
 type MemoryNodesService struct {
-	repo *repositories.MemoryNodesRepository
+	repo               *repositories.MemoryNodesRepository
+	memoryNodeUsersRepo *repositories.MemoryNodeUsersRepository
 }
 
-func NewMemoryNodesService(repo *repositories.MemoryNodesRepository) *MemoryNodesService {
-	return &MemoryNodesService{repo: repo}
+func NewMemoryNodesService(
+	repo *repositories.MemoryNodesRepository,
+	memoryNodeUsersRepo *repositories.MemoryNodeUsersRepository,
+) *MemoryNodesService {
+	return &MemoryNodesService{
+		repo:                repo,
+		memoryNodeUsersRepo: memoryNodeUsersRepo,
+	}
 }
 
 func (s *MemoryNodesService) toFull(node *ent.MemoryNode) *models.MemoryNodeFull {
@@ -60,11 +67,19 @@ func (s *MemoryNodesService) toFull(node *ent.MemoryNode) *models.MemoryNodeFull
 	}
 }
 
+func (s *MemoryNodesService) touchSharedNode(ctx context.Context, node *ent.MemoryNode, userID int) {
+	if node == nil || !node.Shared || node.UserID == userID {
+		return
+	}
+	_ = s.memoryNodeUsersRepo.EnsureLink(ctx, node.ID, userID)
+}
+
 func (s *MemoryNodesService) Get(ctx context.Context, id, userID int) (*models.MemoryNodeFull, error) {
 	node, err := s.repo.GetForUser(ctx, id, userID)
 	if err != nil {
 		return nil, err
 	}
+	s.touchSharedNode(ctx, node, userID)
 	return s.toFull(node), nil
 }
 
@@ -76,6 +91,7 @@ func (s *MemoryNodesService) GetByIDs(ctx context.Context, ids []int, userID int
 	byID := make(map[int]*ent.MemoryNode, len(nodes))
 	for _, n := range nodes {
 		byID[n.ID] = n
+		s.touchSharedNode(ctx, n, userID)
 	}
 	result := make([]*models.MemoryNodeFull, 0, len(ids))
 	for _, id := range ids {
@@ -93,6 +109,20 @@ func (s *MemoryNodesService) GetAll(ctx context.Context, userID int) ([]*models.
 	}
 	result := make([]*models.MemoryNodeFull, 0, len(nodes))
 	for _, n := range nodes {
+		s.touchSharedNode(ctx, n, userID)
+		result = append(result, s.toFull(n))
+	}
+	return result, nil
+}
+
+func (s *MemoryNodesService) GetRoots(ctx context.Context, userID int) ([]*models.MemoryNodeFull, error) {
+	nodes, err := s.repo.GetRootsByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*models.MemoryNodeFull, 0, len(nodes))
+	for _, n := range nodes {
+		s.touchSharedNode(ctx, n, userID)
 		result = append(result, s.toFull(n))
 	}
 	return result, nil
@@ -144,6 +174,7 @@ func (s *MemoryNodesService) GetByAlias(ctx context.Context, alias string, userI
 	if err != nil {
 		return nil, err
 	}
+	s.touchSharedNode(ctx, node, userID)
 	return s.toFull(node), nil
 }
 
@@ -157,6 +188,7 @@ func (s *MemoryNodesService) GetParentsPath(ctx context.Context, id, userID int)
 	chain := []models.MemoryNodePathItem{{ID: node.ID, Name: node.Name}}
 	seen := map[int]bool{node.ID: true}
 	current := node
+	s.touchSharedNode(ctx, node, userID)
 
 	for len(current.Parents) > 0 {
 		parentID := current.Parents[0]
@@ -167,6 +199,7 @@ func (s *MemoryNodesService) GetParentsPath(ctx context.Context, id, userID int)
 		if err != nil {
 			break
 		}
+		s.touchSharedNode(ctx, parent, userID)
 		chain = append(chain, models.MemoryNodePathItem{ID: parent.ID, Name: parent.Name})
 		seen[parent.ID] = true
 		current = parent

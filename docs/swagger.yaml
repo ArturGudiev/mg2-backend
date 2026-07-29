@@ -1195,6 +1195,36 @@ paths:
       summary: List memory nodes
       tags:
       - memory-nodes
+  /memory-nodes/roots:
+    get:
+      description: Returns memory nodes with no parents for the authenticated user
+        (including shared roots)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MemoryNodeFull'
+            type: array
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - AccessTokenCookie: []
+      summary: List root memory nodes
+      tags:
+      - memory-nodes
   /new-card:
     post:
       consumes:

@@ -29,6 +29,21 @@ func (r *MemoryNodesRepository) GetAllByUser(ctx context.Context, userID int) ([
 	return r.client.MemoryNode.Query().Where(accessibleMemoryNode(userID)).All(ctx)
 }
 
+// GetRootsByUser returns accessible nodes that have no parents.
+func (r *MemoryNodesRepository) GetRootsByUser(ctx context.Context, userID int) ([]*ent.MemoryNode, error) {
+	nodes, err := r.GetAllByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	roots := make([]*ent.MemoryNode, 0)
+	for _, n := range nodes {
+		if len(n.Parents) == 0 {
+			roots = append(roots, n)
+		}
+	}
+	return roots, nil
+}
+
 func (r *MemoryNodesRepository) Get(ctx context.Context, id int) (*ent.MemoryNode, error) {
 	return r.client.MemoryNode.Get(ctx, id)
 }

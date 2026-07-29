@@ -13,7 +13,10 @@ import (
 
 	"arturgudiev/memoryguard/ent/card"
 	"arturgudiev/memoryguard/ent/carditem"
+	"arturgudiev/memoryguard/ent/carduser"
+	"arturgudiev/memoryguard/ent/cardusercount"
 	"arturgudiev/memoryguard/ent/memorynode"
+	"arturgudiev/memoryguard/ent/memorynodeuser"
 	"arturgudiev/memoryguard/ent/refreshtoken"
 	"arturgudiev/memoryguard/ent/user"
 
@@ -32,8 +35,14 @@ type Client struct {
 	Card *CardClient
 	// CardItem is the client for interacting with the CardItem builders.
 	CardItem *CardItemClient
+	// CardUser is the client for interacting with the CardUser builders.
+	CardUser *CardUserClient
+	// CardUserCount is the client for interacting with the CardUserCount builders.
+	CardUserCount *CardUserCountClient
 	// MemoryNode is the client for interacting with the MemoryNode builders.
 	MemoryNode *MemoryNodeClient
+	// MemoryNodeUser is the client for interacting with the MemoryNodeUser builders.
+	MemoryNodeUser *MemoryNodeUserClient
 	// RefreshToken is the client for interacting with the RefreshToken builders.
 	RefreshToken *RefreshTokenClient
 	// User is the client for interacting with the User builders.
@@ -51,7 +60,10 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Card = NewCardClient(c.config)
 	c.CardItem = NewCardItemClient(c.config)
+	c.CardUser = NewCardUserClient(c.config)
+	c.CardUserCount = NewCardUserCountClient(c.config)
 	c.MemoryNode = NewMemoryNodeClient(c.config)
+	c.MemoryNodeUser = NewMemoryNodeUserClient(c.config)
 	c.RefreshToken = NewRefreshTokenClient(c.config)
 	c.User = NewUserClient(c.config)
 }
@@ -144,13 +156,16 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		Card:         NewCardClient(cfg),
-		CardItem:     NewCardItemClient(cfg),
-		MemoryNode:   NewMemoryNodeClient(cfg),
-		RefreshToken: NewRefreshTokenClient(cfg),
-		User:         NewUserClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		Card:           NewCardClient(cfg),
+		CardItem:       NewCardItemClient(cfg),
+		CardUser:       NewCardUserClient(cfg),
+		CardUserCount:  NewCardUserCountClient(cfg),
+		MemoryNode:     NewMemoryNodeClient(cfg),
+		MemoryNodeUser: NewMemoryNodeUserClient(cfg),
+		RefreshToken:   NewRefreshTokenClient(cfg),
+		User:           NewUserClient(cfg),
 	}, nil
 }
 
@@ -168,13 +183,16 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		Card:         NewCardClient(cfg),
-		CardItem:     NewCardItemClient(cfg),
-		MemoryNode:   NewMemoryNodeClient(cfg),
-		RefreshToken: NewRefreshTokenClient(cfg),
-		User:         NewUserClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		Card:           NewCardClient(cfg),
+		CardItem:       NewCardItemClient(cfg),
+		CardUser:       NewCardUserClient(cfg),
+		CardUserCount:  NewCardUserCountClient(cfg),
+		MemoryNode:     NewMemoryNodeClient(cfg),
+		MemoryNodeUser: NewMemoryNodeUserClient(cfg),
+		RefreshToken:   NewRefreshTokenClient(cfg),
+		User:           NewUserClient(cfg),
 	}, nil
 }
 
@@ -203,21 +221,23 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Card.Use(hooks...)
-	c.CardItem.Use(hooks...)
-	c.MemoryNode.Use(hooks...)
-	c.RefreshToken.Use(hooks...)
-	c.User.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Card, c.CardItem, c.CardUser, c.CardUserCount, c.MemoryNode, c.MemoryNodeUser,
+		c.RefreshToken, c.User,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Card.Intercept(interceptors...)
-	c.CardItem.Intercept(interceptors...)
-	c.MemoryNode.Intercept(interceptors...)
-	c.RefreshToken.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Card, c.CardItem, c.CardUser, c.CardUserCount, c.MemoryNode, c.MemoryNodeUser,
+		c.RefreshToken, c.User,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -227,8 +247,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Card.mutate(ctx, m)
 	case *CardItemMutation:
 		return c.CardItem.mutate(ctx, m)
+	case *CardUserMutation:
+		return c.CardUser.mutate(ctx, m)
+	case *CardUserCountMutation:
+		return c.CardUserCount.mutate(ctx, m)
 	case *MemoryNodeMutation:
 		return c.MemoryNode.mutate(ctx, m)
+	case *MemoryNodeUserMutation:
+		return c.MemoryNodeUser.mutate(ctx, m)
 	case *RefreshTokenMutation:
 		return c.RefreshToken.mutate(ctx, m)
 	case *UserMutation:
@@ -355,6 +381,38 @@ func (c *CardClient) QueryUser(_m *Card) *UserQuery {
 			sqlgraph.From(card.Table, card.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, card.UserTable, card.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserCounts queries the user_counts edge of a Card.
+func (c *CardClient) QueryUserCounts(_m *Card) *CardUserCountQuery {
+	query := (&CardUserCountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(card.Table, card.FieldID, id),
+			sqlgraph.To(cardusercount.Table, cardusercount.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, card.UserCountsTable, card.UserCountsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCardUsers queries the card_users edge of a Card.
+func (c *CardClient) QueryCardUsers(_m *Card) *CardUserQuery {
+	query := (&CardUserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(card.Table, card.FieldID, id),
+			sqlgraph.To(carduser.Table, carduser.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, card.CardUsersTable, card.CardUsersColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -536,6 +594,336 @@ func (c *CardItemClient) mutate(ctx context.Context, m *CardItemMutation) (Value
 	}
 }
 
+// CardUserClient is a client for the CardUser schema.
+type CardUserClient struct {
+	config
+}
+
+// NewCardUserClient returns a client for the CardUser from the given config.
+func NewCardUserClient(c config) *CardUserClient {
+	return &CardUserClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `carduser.Hooks(f(g(h())))`.
+func (c *CardUserClient) Use(hooks ...Hook) {
+	c.hooks.CardUser = append(c.hooks.CardUser, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `carduser.Intercept(f(g(h())))`.
+func (c *CardUserClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CardUser = append(c.inters.CardUser, interceptors...)
+}
+
+// Create returns a builder for creating a CardUser entity.
+func (c *CardUserClient) Create() *CardUserCreate {
+	mutation := newCardUserMutation(c.config, OpCreate)
+	return &CardUserCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CardUser entities.
+func (c *CardUserClient) CreateBulk(builders ...*CardUserCreate) *CardUserCreateBulk {
+	return &CardUserCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CardUserClient) MapCreateBulk(slice any, setFunc func(*CardUserCreate, int)) *CardUserCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CardUserCreateBulk{err: fmt.Errorf("calling to CardUserClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CardUserCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CardUserCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CardUser.
+func (c *CardUserClient) Update() *CardUserUpdate {
+	mutation := newCardUserMutation(c.config, OpUpdate)
+	return &CardUserUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CardUserClient) UpdateOne(_m *CardUser) *CardUserUpdateOne {
+	mutation := newCardUserMutation(c.config, OpUpdateOne, withCardUser(_m))
+	return &CardUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CardUserClient) UpdateOneID(id int) *CardUserUpdateOne {
+	mutation := newCardUserMutation(c.config, OpUpdateOne, withCardUserID(id))
+	return &CardUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CardUser.
+func (c *CardUserClient) Delete() *CardUserDelete {
+	mutation := newCardUserMutation(c.config, OpDelete)
+	return &CardUserDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CardUserClient) DeleteOne(_m *CardUser) *CardUserDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CardUserClient) DeleteOneID(id int) *CardUserDeleteOne {
+	builder := c.Delete().Where(carduser.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CardUserDeleteOne{builder}
+}
+
+// Query returns a query builder for CardUser.
+func (c *CardUserClient) Query() *CardUserQuery {
+	return &CardUserQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCardUser},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CardUser entity by its id.
+func (c *CardUserClient) Get(ctx context.Context, id int) (*CardUser, error) {
+	return c.Query().Where(carduser.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CardUserClient) GetX(ctx context.Context, id int) *CardUser {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCard queries the card edge of a CardUser.
+func (c *CardUserClient) QueryCard(_m *CardUser) *CardQuery {
+	query := (&CardClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carduser.Table, carduser.FieldID, id),
+			sqlgraph.To(card.Table, card.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, carduser.CardTable, carduser.CardColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a CardUser.
+func (c *CardUserClient) QueryUser(_m *CardUser) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carduser.Table, carduser.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, carduser.UserTable, carduser.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CardUserClient) Hooks() []Hook {
+	return c.hooks.CardUser
+}
+
+// Interceptors returns the client interceptors.
+func (c *CardUserClient) Interceptors() []Interceptor {
+	return c.inters.CardUser
+}
+
+func (c *CardUserClient) mutate(ctx context.Context, m *CardUserMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CardUserCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CardUserUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CardUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CardUserDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CardUser mutation op: %q", m.Op())
+	}
+}
+
+// CardUserCountClient is a client for the CardUserCount schema.
+type CardUserCountClient struct {
+	config
+}
+
+// NewCardUserCountClient returns a client for the CardUserCount from the given config.
+func NewCardUserCountClient(c config) *CardUserCountClient {
+	return &CardUserCountClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `cardusercount.Hooks(f(g(h())))`.
+func (c *CardUserCountClient) Use(hooks ...Hook) {
+	c.hooks.CardUserCount = append(c.hooks.CardUserCount, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `cardusercount.Intercept(f(g(h())))`.
+func (c *CardUserCountClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CardUserCount = append(c.inters.CardUserCount, interceptors...)
+}
+
+// Create returns a builder for creating a CardUserCount entity.
+func (c *CardUserCountClient) Create() *CardUserCountCreate {
+	mutation := newCardUserCountMutation(c.config, OpCreate)
+	return &CardUserCountCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CardUserCount entities.
+func (c *CardUserCountClient) CreateBulk(builders ...*CardUserCountCreate) *CardUserCountCreateBulk {
+	return &CardUserCountCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CardUserCountClient) MapCreateBulk(slice any, setFunc func(*CardUserCountCreate, int)) *CardUserCountCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CardUserCountCreateBulk{err: fmt.Errorf("calling to CardUserCountClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CardUserCountCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CardUserCountCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CardUserCount.
+func (c *CardUserCountClient) Update() *CardUserCountUpdate {
+	mutation := newCardUserCountMutation(c.config, OpUpdate)
+	return &CardUserCountUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CardUserCountClient) UpdateOne(_m *CardUserCount) *CardUserCountUpdateOne {
+	mutation := newCardUserCountMutation(c.config, OpUpdateOne, withCardUserCount(_m))
+	return &CardUserCountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CardUserCountClient) UpdateOneID(id int) *CardUserCountUpdateOne {
+	mutation := newCardUserCountMutation(c.config, OpUpdateOne, withCardUserCountID(id))
+	return &CardUserCountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CardUserCount.
+func (c *CardUserCountClient) Delete() *CardUserCountDelete {
+	mutation := newCardUserCountMutation(c.config, OpDelete)
+	return &CardUserCountDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CardUserCountClient) DeleteOne(_m *CardUserCount) *CardUserCountDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CardUserCountClient) DeleteOneID(id int) *CardUserCountDeleteOne {
+	builder := c.Delete().Where(cardusercount.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CardUserCountDeleteOne{builder}
+}
+
+// Query returns a query builder for CardUserCount.
+func (c *CardUserCountClient) Query() *CardUserCountQuery {
+	return &CardUserCountQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCardUserCount},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CardUserCount entity by its id.
+func (c *CardUserCountClient) Get(ctx context.Context, id int) (*CardUserCount, error) {
+	return c.Query().Where(cardusercount.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CardUserCountClient) GetX(ctx context.Context, id int) *CardUserCount {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCard queries the card edge of a CardUserCount.
+func (c *CardUserCountClient) QueryCard(_m *CardUserCount) *CardQuery {
+	query := (&CardClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(cardusercount.Table, cardusercount.FieldID, id),
+			sqlgraph.To(card.Table, card.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, cardusercount.CardTable, cardusercount.CardColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a CardUserCount.
+func (c *CardUserCountClient) QueryUser(_m *CardUserCount) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(cardusercount.Table, cardusercount.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, cardusercount.UserTable, cardusercount.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CardUserCountClient) Hooks() []Hook {
+	return c.hooks.CardUserCount
+}
+
+// Interceptors returns the client interceptors.
+func (c *CardUserCountClient) Interceptors() []Interceptor {
+	return c.inters.CardUserCount
+}
+
+func (c *CardUserCountClient) mutate(ctx context.Context, m *CardUserCountMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CardUserCountCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CardUserCountUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CardUserCountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CardUserCountDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CardUserCount mutation op: %q", m.Op())
+	}
+}
+
 // MemoryNodeClient is a client for the MemoryNode schema.
 type MemoryNodeClient struct {
 	config
@@ -660,6 +1048,22 @@ func (c *MemoryNodeClient) QueryUser(_m *MemoryNode) *UserQuery {
 	return query
 }
 
+// QueryMemoryNodeUsers queries the memory_node_users edge of a MemoryNode.
+func (c *MemoryNodeClient) QueryMemoryNodeUsers(_m *MemoryNode) *MemoryNodeUserQuery {
+	query := (&MemoryNodeUserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(memorynode.Table, memorynode.FieldID, id),
+			sqlgraph.To(memorynodeuser.Table, memorynodeuser.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, memorynode.MemoryNodeUsersTable, memorynode.MemoryNodeUsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *MemoryNodeClient) Hooks() []Hook {
 	return c.hooks.MemoryNode
@@ -682,6 +1086,171 @@ func (c *MemoryNodeClient) mutate(ctx context.Context, m *MemoryNodeMutation) (V
 		return (&MemoryNodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown MemoryNode mutation op: %q", m.Op())
+	}
+}
+
+// MemoryNodeUserClient is a client for the MemoryNodeUser schema.
+type MemoryNodeUserClient struct {
+	config
+}
+
+// NewMemoryNodeUserClient returns a client for the MemoryNodeUser from the given config.
+func NewMemoryNodeUserClient(c config) *MemoryNodeUserClient {
+	return &MemoryNodeUserClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `memorynodeuser.Hooks(f(g(h())))`.
+func (c *MemoryNodeUserClient) Use(hooks ...Hook) {
+	c.hooks.MemoryNodeUser = append(c.hooks.MemoryNodeUser, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `memorynodeuser.Intercept(f(g(h())))`.
+func (c *MemoryNodeUserClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MemoryNodeUser = append(c.inters.MemoryNodeUser, interceptors...)
+}
+
+// Create returns a builder for creating a MemoryNodeUser entity.
+func (c *MemoryNodeUserClient) Create() *MemoryNodeUserCreate {
+	mutation := newMemoryNodeUserMutation(c.config, OpCreate)
+	return &MemoryNodeUserCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MemoryNodeUser entities.
+func (c *MemoryNodeUserClient) CreateBulk(builders ...*MemoryNodeUserCreate) *MemoryNodeUserCreateBulk {
+	return &MemoryNodeUserCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MemoryNodeUserClient) MapCreateBulk(slice any, setFunc func(*MemoryNodeUserCreate, int)) *MemoryNodeUserCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MemoryNodeUserCreateBulk{err: fmt.Errorf("calling to MemoryNodeUserClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MemoryNodeUserCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MemoryNodeUserCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MemoryNodeUser.
+func (c *MemoryNodeUserClient) Update() *MemoryNodeUserUpdate {
+	mutation := newMemoryNodeUserMutation(c.config, OpUpdate)
+	return &MemoryNodeUserUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MemoryNodeUserClient) UpdateOne(_m *MemoryNodeUser) *MemoryNodeUserUpdateOne {
+	mutation := newMemoryNodeUserMutation(c.config, OpUpdateOne, withMemoryNodeUser(_m))
+	return &MemoryNodeUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MemoryNodeUserClient) UpdateOneID(id int) *MemoryNodeUserUpdateOne {
+	mutation := newMemoryNodeUserMutation(c.config, OpUpdateOne, withMemoryNodeUserID(id))
+	return &MemoryNodeUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MemoryNodeUser.
+func (c *MemoryNodeUserClient) Delete() *MemoryNodeUserDelete {
+	mutation := newMemoryNodeUserMutation(c.config, OpDelete)
+	return &MemoryNodeUserDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MemoryNodeUserClient) DeleteOne(_m *MemoryNodeUser) *MemoryNodeUserDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MemoryNodeUserClient) DeleteOneID(id int) *MemoryNodeUserDeleteOne {
+	builder := c.Delete().Where(memorynodeuser.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MemoryNodeUserDeleteOne{builder}
+}
+
+// Query returns a query builder for MemoryNodeUser.
+func (c *MemoryNodeUserClient) Query() *MemoryNodeUserQuery {
+	return &MemoryNodeUserQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMemoryNodeUser},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MemoryNodeUser entity by its id.
+func (c *MemoryNodeUserClient) Get(ctx context.Context, id int) (*MemoryNodeUser, error) {
+	return c.Query().Where(memorynodeuser.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MemoryNodeUserClient) GetX(ctx context.Context, id int) *MemoryNodeUser {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryMemoryNode queries the memory_node edge of a MemoryNodeUser.
+func (c *MemoryNodeUserClient) QueryMemoryNode(_m *MemoryNodeUser) *MemoryNodeQuery {
+	query := (&MemoryNodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(memorynodeuser.Table, memorynodeuser.FieldID, id),
+			sqlgraph.To(memorynode.Table, memorynode.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, memorynodeuser.MemoryNodeTable, memorynodeuser.MemoryNodeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a MemoryNodeUser.
+func (c *MemoryNodeUserClient) QueryUser(_m *MemoryNodeUser) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(memorynodeuser.Table, memorynodeuser.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, memorynodeuser.UserTable, memorynodeuser.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MemoryNodeUserClient) Hooks() []Hook {
+	return c.hooks.MemoryNodeUser
+}
+
+// Interceptors returns the client interceptors.
+func (c *MemoryNodeUserClient) Interceptors() []Interceptor {
+	return c.inters.MemoryNodeUser
+}
+
+func (c *MemoryNodeUserClient) mutate(ctx context.Context, m *MemoryNodeUserMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MemoryNodeUserCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MemoryNodeUserUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MemoryNodeUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MemoryNodeUserDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MemoryNodeUser mutation op: %q", m.Op())
 	}
 }
 
@@ -1006,6 +1575,54 @@ func (c *UserClient) QueryCardItems(_m *User) *CardItemQuery {
 	return query
 }
 
+// QueryCardUserCounts queries the card_user_counts edge of a User.
+func (c *UserClient) QueryCardUserCounts(_m *User) *CardUserCountQuery {
+	query := (&CardUserCountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(cardusercount.Table, cardusercount.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CardUserCountsTable, user.CardUserCountsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCardUsers queries the card_users edge of a User.
+func (c *UserClient) QueryCardUsers(_m *User) *CardUserQuery {
+	query := (&CardUserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(carduser.Table, carduser.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CardUsersTable, user.CardUsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMemoryNodeUsers queries the memory_node_users edge of a User.
+func (c *UserClient) QueryMemoryNodeUsers(_m *User) *MemoryNodeUserQuery {
+	query := (&MemoryNodeUserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(memorynodeuser.Table, memorynodeuser.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MemoryNodeUsersTable, user.MemoryNodeUsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -1034,9 +1651,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Card, CardItem, MemoryNode, RefreshToken, User []ent.Hook
+		Card, CardItem, CardUser, CardUserCount, MemoryNode, MemoryNodeUser,
+		RefreshToken, User []ent.Hook
 	}
 	inters struct {
-		Card, CardItem, MemoryNode, RefreshToken, User []ent.Interceptor
+		Card, CardItem, CardUser, CardUserCount, MemoryNode, MemoryNodeUser,
+		RefreshToken, User []ent.Interceptor
 	}
 )

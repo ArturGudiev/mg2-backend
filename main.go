@@ -110,6 +110,7 @@ func main() {
 	// Memory nodes
 	router.GET("/memory-node/:id", h.GetMemoryNodeByID)
 	router.GET("/memory-node/:id/parents-path", h.GetMemoryNodeParentsPath)
+	router.GET("/memory-nodes/roots", h.ListRootMemoryNodes)
 	router.GET("/memory-nodes", h.ListMemoryNodes)
 	router.POST("/get-memory-nodes", h.GetMemoryNodesByIDs)
 	router.GET("/memory-node-by-alias/:alias", h.GetMemoryNodeByAlias)

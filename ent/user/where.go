@@ -387,6 +387,75 @@ func HasCardItemsWith(preds ...predicate.CardItem) predicate.User {
 	})
 }
 
+// HasCardUserCounts applies the HasEdge predicate on the "card_user_counts" edge.
+func HasCardUserCounts() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CardUserCountsTable, CardUserCountsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCardUserCountsWith applies the HasEdge predicate on the "card_user_counts" edge with a given conditions (other predicates).
+func HasCardUserCountsWith(preds ...predicate.CardUserCount) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newCardUserCountsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCardUsers applies the HasEdge predicate on the "card_users" edge.
+func HasCardUsers() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CardUsersTable, CardUsersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCardUsersWith applies the HasEdge predicate on the "card_users" edge with a given conditions (other predicates).
+func HasCardUsersWith(preds ...predicate.CardUser) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newCardUsersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMemoryNodeUsers applies the HasEdge predicate on the "memory_node_users" edge.
+func HasMemoryNodeUsers() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MemoryNodeUsersTable, MemoryNodeUsersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMemoryNodeUsersWith applies the HasEdge predicate on the "memory_node_users" edge with a given conditions (other predicates).
+func HasMemoryNodeUsersWith(preds ...predicate.MemoryNodeUser) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newMemoryNodeUsersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

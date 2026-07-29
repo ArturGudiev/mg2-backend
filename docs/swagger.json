@@ -1173,6 +1173,52 @@
                 }
             }
         },
+        "/memory-nodes/roots": {
+            "get": {
+                "security": [
+                    {
+                        "AccessTokenCookie": []
+                    }
+                ],
+                "description": "Returns memory nodes with no parents for the authenticated user (including shared roots)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memory-nodes"
+                ],
+                "summary": "List root memory nodes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.MemoryNodeFull"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/new-card": {
             "post": {
                 "security": [

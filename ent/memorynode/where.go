@@ -207,6 +207,29 @@ func HasUserWith(preds ...predicate.User) predicate.MemoryNode {
 	})
 }
 
+// HasMemoryNodeUsers applies the HasEdge predicate on the "memory_node_users" edge.
+func HasMemoryNodeUsers() predicate.MemoryNode {
+	return predicate.MemoryNode(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MemoryNodeUsersTable, MemoryNodeUsersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMemoryNodeUsersWith applies the HasEdge predicate on the "memory_node_users" edge with a given conditions (other predicates).
+func HasMemoryNodeUsersWith(preds ...predicate.MemoryNodeUser) predicate.MemoryNode {
+	return predicate.MemoryNode(func(s *sql.Selector) {
+		step := newMemoryNodeUsersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.MemoryNode) predicate.MemoryNode {
 	return predicate.MemoryNode(sql.AndPredicates(predicates...))

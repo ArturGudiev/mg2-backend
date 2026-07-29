@@ -5,7 +5,10 @@ package ent
 import (
 	"arturgudiev/memoryguard/ent/card"
 	"arturgudiev/memoryguard/ent/carditem"
+	"arturgudiev/memoryguard/ent/carduser"
+	"arturgudiev/memoryguard/ent/cardusercount"
 	"arturgudiev/memoryguard/ent/memorynode"
+	"arturgudiev/memoryguard/ent/memorynodeuser"
 	"arturgudiev/memoryguard/ent/predicate"
 	"arturgudiev/memoryguard/ent/refreshtoken"
 	"arturgudiev/memoryguard/ent/schema"
@@ -29,11 +32,14 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeCard         = "Card"
-	TypeCardItem     = "CardItem"
-	TypeMemoryNode   = "MemoryNode"
-	TypeRefreshToken = "RefreshToken"
-	TypeUser         = "User"
+	TypeCard           = "Card"
+	TypeCardItem       = "CardItem"
+	TypeCardUser       = "CardUser"
+	TypeCardUserCount  = "CardUserCount"
+	TypeMemoryNode     = "MemoryNode"
+	TypeMemoryNodeUser = "MemoryNodeUser"
+	TypeRefreshToken   = "RefreshToken"
+	TypeUser           = "User"
 )
 
 // CardMutation represents an operation that mutates the Card nodes in the graph.
@@ -61,6 +67,12 @@ type CardMutation struct {
 	clearedFields      map[string]struct{}
 	user               *int
 	cleareduser        bool
+	user_counts        map[int]struct{}
+	removeduser_counts map[int]struct{}
+	cleareduser_counts bool
+	card_users         map[int]struct{}
+	removedcard_users  map[int]struct{}
+	clearedcard_users  bool
 	done               bool
 	oldValue           func(context.Context) (*Card, error)
 	predicates         []predicate.Card
@@ -682,6 +694,114 @@ func (m *CardMutation) ResetUser() {
 	m.cleareduser = false
 }
 
+// AddUserCountIDs adds the "user_counts" edge to the CardUserCount entity by ids.
+func (m *CardMutation) AddUserCountIDs(ids ...int) {
+	if m.user_counts == nil {
+		m.user_counts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.user_counts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUserCounts clears the "user_counts" edge to the CardUserCount entity.
+func (m *CardMutation) ClearUserCounts() {
+	m.cleareduser_counts = true
+}
+
+// UserCountsCleared reports if the "user_counts" edge to the CardUserCount entity was cleared.
+func (m *CardMutation) UserCountsCleared() bool {
+	return m.cleareduser_counts
+}
+
+// RemoveUserCountIDs removes the "user_counts" edge to the CardUserCount entity by IDs.
+func (m *CardMutation) RemoveUserCountIDs(ids ...int) {
+	if m.removeduser_counts == nil {
+		m.removeduser_counts = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.user_counts, ids[i])
+		m.removeduser_counts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUserCounts returns the removed IDs of the "user_counts" edge to the CardUserCount entity.
+func (m *CardMutation) RemovedUserCountsIDs() (ids []int) {
+	for id := range m.removeduser_counts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UserCountsIDs returns the "user_counts" edge IDs in the mutation.
+func (m *CardMutation) UserCountsIDs() (ids []int) {
+	for id := range m.user_counts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUserCounts resets all changes to the "user_counts" edge.
+func (m *CardMutation) ResetUserCounts() {
+	m.user_counts = nil
+	m.cleareduser_counts = false
+	m.removeduser_counts = nil
+}
+
+// AddCardUserIDs adds the "card_users" edge to the CardUser entity by ids.
+func (m *CardMutation) AddCardUserIDs(ids ...int) {
+	if m.card_users == nil {
+		m.card_users = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.card_users[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCardUsers clears the "card_users" edge to the CardUser entity.
+func (m *CardMutation) ClearCardUsers() {
+	m.clearedcard_users = true
+}
+
+// CardUsersCleared reports if the "card_users" edge to the CardUser entity was cleared.
+func (m *CardMutation) CardUsersCleared() bool {
+	return m.clearedcard_users
+}
+
+// RemoveCardUserIDs removes the "card_users" edge to the CardUser entity by IDs.
+func (m *CardMutation) RemoveCardUserIDs(ids ...int) {
+	if m.removedcard_users == nil {
+		m.removedcard_users = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.card_users, ids[i])
+		m.removedcard_users[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCardUsers returns the removed IDs of the "card_users" edge to the CardUser entity.
+func (m *CardMutation) RemovedCardUsersIDs() (ids []int) {
+	for id := range m.removedcard_users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CardUsersIDs returns the "card_users" edge IDs in the mutation.
+func (m *CardMutation) CardUsersIDs() (ids []int) {
+	for id := range m.card_users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCardUsers resets all changes to the "card_users" edge.
+func (m *CardMutation) ResetCardUsers() {
+	m.card_users = nil
+	m.clearedcard_users = false
+	m.removedcard_users = nil
+}
+
 // Where appends a list predicates to the CardMutation builder.
 func (m *CardMutation) Where(ps ...predicate.Card) {
 	m.predicates = append(m.predicates, ps...)
@@ -1019,9 +1139,15 @@ func (m *CardMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *CardMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.user != nil {
 		edges = append(edges, card.EdgeUser)
+	}
+	if m.user_counts != nil {
+		edges = append(edges, card.EdgeUserCounts)
+	}
+	if m.card_users != nil {
+		edges = append(edges, card.EdgeCardUsers)
 	}
 	return edges
 }
@@ -1034,27 +1160,65 @@ func (m *CardMutation) AddedIDs(name string) []ent.Value {
 		if id := m.user; id != nil {
 			return []ent.Value{*id}
 		}
+	case card.EdgeUserCounts:
+		ids := make([]ent.Value, 0, len(m.user_counts))
+		for id := range m.user_counts {
+			ids = append(ids, id)
+		}
+		return ids
+	case card.EdgeCardUsers:
+		ids := make([]ent.Value, 0, len(m.card_users))
+		for id := range m.card_users {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CardMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
+	if m.removeduser_counts != nil {
+		edges = append(edges, card.EdgeUserCounts)
+	}
+	if m.removedcard_users != nil {
+		edges = append(edges, card.EdgeCardUsers)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *CardMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case card.EdgeUserCounts:
+		ids := make([]ent.Value, 0, len(m.removeduser_counts))
+		for id := range m.removeduser_counts {
+			ids = append(ids, id)
+		}
+		return ids
+	case card.EdgeCardUsers:
+		ids := make([]ent.Value, 0, len(m.removedcard_users))
+		for id := range m.removedcard_users {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *CardMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.cleareduser {
 		edges = append(edges, card.EdgeUser)
+	}
+	if m.cleareduser_counts {
+		edges = append(edges, card.EdgeUserCounts)
+	}
+	if m.clearedcard_users {
+		edges = append(edges, card.EdgeCardUsers)
 	}
 	return edges
 }
@@ -1065,6 +1229,10 @@ func (m *CardMutation) EdgeCleared(name string) bool {
 	switch name {
 	case card.EdgeUser:
 		return m.cleareduser
+	case card.EdgeUserCounts:
+		return m.cleareduser_counts
+	case card.EdgeCardUsers:
+		return m.clearedcard_users
 	}
 	return false
 }
@@ -1086,6 +1254,12 @@ func (m *CardMutation) ResetEdge(name string) error {
 	switch name {
 	case card.EdgeUser:
 		m.ResetUser()
+		return nil
+	case card.EdgeUserCounts:
+		m.ResetUserCounts()
+		return nil
+	case card.EdgeCardUsers:
+		m.ResetCardUsers()
 		return nil
 	}
 	return fmt.Errorf("unknown Card edge %s", name)
@@ -2136,32 +2310,1100 @@ func (m *CardItemMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown CardItem edge %s", name)
 }
 
+// CardUserMutation represents an operation that mutates the CardUser nodes in the graph.
+type CardUserMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	clearedFields map[string]struct{}
+	card          *int
+	clearedcard   bool
+	user          *int
+	cleareduser   bool
+	done          bool
+	oldValue      func(context.Context) (*CardUser, error)
+	predicates    []predicate.CardUser
+}
+
+var _ ent.Mutation = (*CardUserMutation)(nil)
+
+// carduserOption allows management of the mutation configuration using functional options.
+type carduserOption func(*CardUserMutation)
+
+// newCardUserMutation creates new mutation for the CardUser entity.
+func newCardUserMutation(c config, op Op, opts ...carduserOption) *CardUserMutation {
+	m := &CardUserMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCardUser,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCardUserID sets the ID field of the mutation.
+func withCardUserID(id int) carduserOption {
+	return func(m *CardUserMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *CardUser
+		)
+		m.oldValue = func(ctx context.Context) (*CardUser, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().CardUser.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCardUser sets the old CardUser of the mutation.
+func withCardUser(node *CardUser) carduserOption {
+	return func(m *CardUserMutation) {
+		m.oldValue = func(context.Context) (*CardUser, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CardUserMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CardUserMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of CardUser entities.
+func (m *CardUserMutation) SetID(id int) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CardUserMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CardUserMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().CardUser.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCardID sets the "card_id" field.
+func (m *CardUserMutation) SetCardID(i int) {
+	m.card = &i
+}
+
+// CardID returns the value of the "card_id" field in the mutation.
+func (m *CardUserMutation) CardID() (r int, exists bool) {
+	v := m.card
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCardID returns the old "card_id" field's value of the CardUser entity.
+// If the CardUser object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CardUserMutation) OldCardID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCardID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCardID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCardID: %w", err)
+	}
+	return oldValue.CardID, nil
+}
+
+// ResetCardID resets all changes to the "card_id" field.
+func (m *CardUserMutation) ResetCardID() {
+	m.card = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *CardUserMutation) SetUserID(i int) {
+	m.user = &i
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *CardUserMutation) UserID() (r int, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the CardUser entity.
+// If the CardUser object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CardUserMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *CardUserMutation) ResetUserID() {
+	m.user = nil
+}
+
+// ClearCard clears the "card" edge to the Card entity.
+func (m *CardUserMutation) ClearCard() {
+	m.clearedcard = true
+	m.clearedFields[carduser.FieldCardID] = struct{}{}
+}
+
+// CardCleared reports if the "card" edge to the Card entity was cleared.
+func (m *CardUserMutation) CardCleared() bool {
+	return m.clearedcard
+}
+
+// CardIDs returns the "card" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CardID instead. It exists only for internal usage by the builders.
+func (m *CardUserMutation) CardIDs() (ids []int) {
+	if id := m.card; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCard resets all changes to the "card" edge.
+func (m *CardUserMutation) ResetCard() {
+	m.card = nil
+	m.clearedcard = false
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *CardUserMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[carduser.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *CardUserMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *CardUserMutation) UserIDs() (ids []int) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *CardUserMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// Where appends a list predicates to the CardUserMutation builder.
+func (m *CardUserMutation) Where(ps ...predicate.CardUser) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CardUserMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CardUserMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.CardUser, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CardUserMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CardUserMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (CardUser).
+func (m *CardUserMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CardUserMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.card != nil {
+		fields = append(fields, carduser.FieldCardID)
+	}
+	if m.user != nil {
+		fields = append(fields, carduser.FieldUserID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CardUserMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case carduser.FieldCardID:
+		return m.CardID()
+	case carduser.FieldUserID:
+		return m.UserID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CardUserMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case carduser.FieldCardID:
+		return m.OldCardID(ctx)
+	case carduser.FieldUserID:
+		return m.OldUserID(ctx)
+	}
+	return nil, fmt.Errorf("unknown CardUser field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CardUserMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case carduser.FieldCardID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCardID(v)
+		return nil
+	case carduser.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CardUser field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CardUserMutation) AddedFields() []string {
+	var fields []string
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CardUserMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CardUserMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown CardUser numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CardUserMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CardUserMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CardUserMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown CardUser nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CardUserMutation) ResetField(name string) error {
+	switch name {
+	case carduser.FieldCardID:
+		m.ResetCardID()
+		return nil
+	case carduser.FieldUserID:
+		m.ResetUserID()
+		return nil
+	}
+	return fmt.Errorf("unknown CardUser field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CardUserMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.card != nil {
+		edges = append(edges, carduser.EdgeCard)
+	}
+	if m.user != nil {
+		edges = append(edges, carduser.EdgeUser)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CardUserMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case carduser.EdgeCard:
+		if id := m.card; id != nil {
+			return []ent.Value{*id}
+		}
+	case carduser.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CardUserMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CardUserMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CardUserMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedcard {
+		edges = append(edges, carduser.EdgeCard)
+	}
+	if m.cleareduser {
+		edges = append(edges, carduser.EdgeUser)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CardUserMutation) EdgeCleared(name string) bool {
+	switch name {
+	case carduser.EdgeCard:
+		return m.clearedcard
+	case carduser.EdgeUser:
+		return m.cleareduser
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CardUserMutation) ClearEdge(name string) error {
+	switch name {
+	case carduser.EdgeCard:
+		m.ClearCard()
+		return nil
+	case carduser.EdgeUser:
+		m.ClearUser()
+		return nil
+	}
+	return fmt.Errorf("unknown CardUser unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CardUserMutation) ResetEdge(name string) error {
+	switch name {
+	case carduser.EdgeCard:
+		m.ResetCard()
+		return nil
+	case carduser.EdgeUser:
+		m.ResetUser()
+		return nil
+	}
+	return fmt.Errorf("unknown CardUser edge %s", name)
+}
+
+// CardUserCountMutation represents an operation that mutates the CardUserCount nodes in the graph.
+type CardUserCountMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	count         *int
+	addcount      *int
+	clearedFields map[string]struct{}
+	card          *int
+	clearedcard   bool
+	user          *int
+	cleareduser   bool
+	done          bool
+	oldValue      func(context.Context) (*CardUserCount, error)
+	predicates    []predicate.CardUserCount
+}
+
+var _ ent.Mutation = (*CardUserCountMutation)(nil)
+
+// cardusercountOption allows management of the mutation configuration using functional options.
+type cardusercountOption func(*CardUserCountMutation)
+
+// newCardUserCountMutation creates new mutation for the CardUserCount entity.
+func newCardUserCountMutation(c config, op Op, opts ...cardusercountOption) *CardUserCountMutation {
+	m := &CardUserCountMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCardUserCount,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCardUserCountID sets the ID field of the mutation.
+func withCardUserCountID(id int) cardusercountOption {
+	return func(m *CardUserCountMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *CardUserCount
+		)
+		m.oldValue = func(ctx context.Context) (*CardUserCount, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().CardUserCount.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCardUserCount sets the old CardUserCount of the mutation.
+func withCardUserCount(node *CardUserCount) cardusercountOption {
+	return func(m *CardUserCountMutation) {
+		m.oldValue = func(context.Context) (*CardUserCount, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CardUserCountMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CardUserCountMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of CardUserCount entities.
+func (m *CardUserCountMutation) SetID(id int) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CardUserCountMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CardUserCountMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().CardUserCount.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCardID sets the "card_id" field.
+func (m *CardUserCountMutation) SetCardID(i int) {
+	m.card = &i
+}
+
+// CardID returns the value of the "card_id" field in the mutation.
+func (m *CardUserCountMutation) CardID() (r int, exists bool) {
+	v := m.card
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCardID returns the old "card_id" field's value of the CardUserCount entity.
+// If the CardUserCount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CardUserCountMutation) OldCardID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCardID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCardID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCardID: %w", err)
+	}
+	return oldValue.CardID, nil
+}
+
+// ResetCardID resets all changes to the "card_id" field.
+func (m *CardUserCountMutation) ResetCardID() {
+	m.card = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *CardUserCountMutation) SetUserID(i int) {
+	m.user = &i
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *CardUserCountMutation) UserID() (r int, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the CardUserCount entity.
+// If the CardUserCount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CardUserCountMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *CardUserCountMutation) ResetUserID() {
+	m.user = nil
+}
+
+// SetCount sets the "count" field.
+func (m *CardUserCountMutation) SetCount(i int) {
+	m.count = &i
+	m.addcount = nil
+}
+
+// Count returns the value of the "count" field in the mutation.
+func (m *CardUserCountMutation) Count() (r int, exists bool) {
+	v := m.count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCount returns the old "count" field's value of the CardUserCount entity.
+// If the CardUserCount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CardUserCountMutation) OldCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCount: %w", err)
+	}
+	return oldValue.Count, nil
+}
+
+// AddCount adds i to the "count" field.
+func (m *CardUserCountMutation) AddCount(i int) {
+	if m.addcount != nil {
+		*m.addcount += i
+	} else {
+		m.addcount = &i
+	}
+}
+
+// AddedCount returns the value that was added to the "count" field in this mutation.
+func (m *CardUserCountMutation) AddedCount() (r int, exists bool) {
+	v := m.addcount
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCount resets all changes to the "count" field.
+func (m *CardUserCountMutation) ResetCount() {
+	m.count = nil
+	m.addcount = nil
+}
+
+// ClearCard clears the "card" edge to the Card entity.
+func (m *CardUserCountMutation) ClearCard() {
+	m.clearedcard = true
+	m.clearedFields[cardusercount.FieldCardID] = struct{}{}
+}
+
+// CardCleared reports if the "card" edge to the Card entity was cleared.
+func (m *CardUserCountMutation) CardCleared() bool {
+	return m.clearedcard
+}
+
+// CardIDs returns the "card" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CardID instead. It exists only for internal usage by the builders.
+func (m *CardUserCountMutation) CardIDs() (ids []int) {
+	if id := m.card; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCard resets all changes to the "card" edge.
+func (m *CardUserCountMutation) ResetCard() {
+	m.card = nil
+	m.clearedcard = false
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *CardUserCountMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[cardusercount.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *CardUserCountMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *CardUserCountMutation) UserIDs() (ids []int) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *CardUserCountMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// Where appends a list predicates to the CardUserCountMutation builder.
+func (m *CardUserCountMutation) Where(ps ...predicate.CardUserCount) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CardUserCountMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CardUserCountMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.CardUserCount, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CardUserCountMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CardUserCountMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (CardUserCount).
+func (m *CardUserCountMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CardUserCountMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.card != nil {
+		fields = append(fields, cardusercount.FieldCardID)
+	}
+	if m.user != nil {
+		fields = append(fields, cardusercount.FieldUserID)
+	}
+	if m.count != nil {
+		fields = append(fields, cardusercount.FieldCount)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CardUserCountMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case cardusercount.FieldCardID:
+		return m.CardID()
+	case cardusercount.FieldUserID:
+		return m.UserID()
+	case cardusercount.FieldCount:
+		return m.Count()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CardUserCountMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case cardusercount.FieldCardID:
+		return m.OldCardID(ctx)
+	case cardusercount.FieldUserID:
+		return m.OldUserID(ctx)
+	case cardusercount.FieldCount:
+		return m.OldCount(ctx)
+	}
+	return nil, fmt.Errorf("unknown CardUserCount field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CardUserCountMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case cardusercount.FieldCardID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCardID(v)
+		return nil
+	case cardusercount.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case cardusercount.FieldCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CardUserCount field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CardUserCountMutation) AddedFields() []string {
+	var fields []string
+	if m.addcount != nil {
+		fields = append(fields, cardusercount.FieldCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CardUserCountMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case cardusercount.FieldCount:
+		return m.AddedCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CardUserCountMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case cardusercount.FieldCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CardUserCount numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CardUserCountMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CardUserCountMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CardUserCountMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown CardUserCount nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CardUserCountMutation) ResetField(name string) error {
+	switch name {
+	case cardusercount.FieldCardID:
+		m.ResetCardID()
+		return nil
+	case cardusercount.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case cardusercount.FieldCount:
+		m.ResetCount()
+		return nil
+	}
+	return fmt.Errorf("unknown CardUserCount field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CardUserCountMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.card != nil {
+		edges = append(edges, cardusercount.EdgeCard)
+	}
+	if m.user != nil {
+		edges = append(edges, cardusercount.EdgeUser)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CardUserCountMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case cardusercount.EdgeCard:
+		if id := m.card; id != nil {
+			return []ent.Value{*id}
+		}
+	case cardusercount.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CardUserCountMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CardUserCountMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CardUserCountMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedcard {
+		edges = append(edges, cardusercount.EdgeCard)
+	}
+	if m.cleareduser {
+		edges = append(edges, cardusercount.EdgeUser)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CardUserCountMutation) EdgeCleared(name string) bool {
+	switch name {
+	case cardusercount.EdgeCard:
+		return m.clearedcard
+	case cardusercount.EdgeUser:
+		return m.cleareduser
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CardUserCountMutation) ClearEdge(name string) error {
+	switch name {
+	case cardusercount.EdgeCard:
+		m.ClearCard()
+		return nil
+	case cardusercount.EdgeUser:
+		m.ClearUser()
+		return nil
+	}
+	return fmt.Errorf("unknown CardUserCount unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CardUserCountMutation) ResetEdge(name string) error {
+	switch name {
+	case cardusercount.EdgeCard:
+		m.ResetCard()
+		return nil
+	case cardusercount.EdgeUser:
+		m.ResetUser()
+		return nil
+	}
+	return fmt.Errorf("unknown CardUserCount edge %s", name)
+}
+
 // MemoryNodeMutation represents an operation that mutates the MemoryNode nodes in the graph.
 type MemoryNodeMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int
-	name             *string
-	children         *[]int
-	appendchildren   []int
-	parents          *[]int
-	appendparents    []int
-	cards            *[]int
-	appendcards      []int
-	aliases          *[]string
-	appendaliases    []string
-	priorities       *[]schema.CardsPriority
-	appendpriorities []schema.CardsPriority
-	groups           *[]schema.CardsGroup
-	appendgroups     []schema.CardsGroup
-	shared           *bool
-	clearedFields    map[string]struct{}
-	user             *int
-	cleareduser      bool
-	done             bool
-	oldValue         func(context.Context) (*MemoryNode, error)
-	predicates       []predicate.MemoryNode
+	op                       Op
+	typ                      string
+	id                       *int
+	name                     *string
+	children                 *[]int
+	appendchildren           []int
+	parents                  *[]int
+	appendparents            []int
+	cards                    *[]int
+	appendcards              []int
+	aliases                  *[]string
+	appendaliases            []string
+	priorities               *[]schema.CardsPriority
+	appendpriorities         []schema.CardsPriority
+	groups                   *[]schema.CardsGroup
+	appendgroups             []schema.CardsGroup
+	shared                   *bool
+	clearedFields            map[string]struct{}
+	user                     *int
+	cleareduser              bool
+	memory_node_users        map[int]struct{}
+	removedmemory_node_users map[int]struct{}
+	clearedmemory_node_users bool
+	done                     bool
+	oldValue                 func(context.Context) (*MemoryNode, error)
+	predicates               []predicate.MemoryNode
 }
 
 var _ ent.Mutation = (*MemoryNodeMutation)(nil)
@@ -2737,6 +3979,60 @@ func (m *MemoryNodeMutation) ResetUser() {
 	m.cleareduser = false
 }
 
+// AddMemoryNodeUserIDs adds the "memory_node_users" edge to the MemoryNodeUser entity by ids.
+func (m *MemoryNodeMutation) AddMemoryNodeUserIDs(ids ...int) {
+	if m.memory_node_users == nil {
+		m.memory_node_users = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.memory_node_users[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMemoryNodeUsers clears the "memory_node_users" edge to the MemoryNodeUser entity.
+func (m *MemoryNodeMutation) ClearMemoryNodeUsers() {
+	m.clearedmemory_node_users = true
+}
+
+// MemoryNodeUsersCleared reports if the "memory_node_users" edge to the MemoryNodeUser entity was cleared.
+func (m *MemoryNodeMutation) MemoryNodeUsersCleared() bool {
+	return m.clearedmemory_node_users
+}
+
+// RemoveMemoryNodeUserIDs removes the "memory_node_users" edge to the MemoryNodeUser entity by IDs.
+func (m *MemoryNodeMutation) RemoveMemoryNodeUserIDs(ids ...int) {
+	if m.removedmemory_node_users == nil {
+		m.removedmemory_node_users = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.memory_node_users, ids[i])
+		m.removedmemory_node_users[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMemoryNodeUsers returns the removed IDs of the "memory_node_users" edge to the MemoryNodeUser entity.
+func (m *MemoryNodeMutation) RemovedMemoryNodeUsersIDs() (ids []int) {
+	for id := range m.removedmemory_node_users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MemoryNodeUsersIDs returns the "memory_node_users" edge IDs in the mutation.
+func (m *MemoryNodeMutation) MemoryNodeUsersIDs() (ids []int) {
+	for id := range m.memory_node_users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMemoryNodeUsers resets all changes to the "memory_node_users" edge.
+func (m *MemoryNodeMutation) ResetMemoryNodeUsers() {
+	m.memory_node_users = nil
+	m.clearedmemory_node_users = false
+	m.removedmemory_node_users = nil
+}
+
 // Where appends a list predicates to the MemoryNodeMutation builder.
 func (m *MemoryNodeMutation) Where(ps ...predicate.MemoryNode) {
 	m.predicates = append(m.predicates, ps...)
@@ -3024,9 +4320,12 @@ func (m *MemoryNodeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *MemoryNodeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.user != nil {
 		edges = append(edges, memorynode.EdgeUser)
+	}
+	if m.memory_node_users != nil {
+		edges = append(edges, memorynode.EdgeMemoryNodeUsers)
 	}
 	return edges
 }
@@ -3039,27 +4338,47 @@ func (m *MemoryNodeMutation) AddedIDs(name string) []ent.Value {
 		if id := m.user; id != nil {
 			return []ent.Value{*id}
 		}
+	case memorynode.EdgeMemoryNodeUsers:
+		ids := make([]ent.Value, 0, len(m.memory_node_users))
+		for id := range m.memory_node_users {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *MemoryNodeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedmemory_node_users != nil {
+		edges = append(edges, memorynode.EdgeMemoryNodeUsers)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *MemoryNodeMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case memorynode.EdgeMemoryNodeUsers:
+		ids := make([]ent.Value, 0, len(m.removedmemory_node_users))
+		for id := range m.removedmemory_node_users {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *MemoryNodeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.cleareduser {
 		edges = append(edges, memorynode.EdgeUser)
+	}
+	if m.clearedmemory_node_users {
+		edges = append(edges, memorynode.EdgeMemoryNodeUsers)
 	}
 	return edges
 }
@@ -3070,6 +4389,8 @@ func (m *MemoryNodeMutation) EdgeCleared(name string) bool {
 	switch name {
 	case memorynode.EdgeUser:
 		return m.cleareduser
+	case memorynode.EdgeMemoryNodeUsers:
+		return m.clearedmemory_node_users
 	}
 	return false
 }
@@ -3092,8 +4413,500 @@ func (m *MemoryNodeMutation) ResetEdge(name string) error {
 	case memorynode.EdgeUser:
 		m.ResetUser()
 		return nil
+	case memorynode.EdgeMemoryNodeUsers:
+		m.ResetMemoryNodeUsers()
+		return nil
 	}
 	return fmt.Errorf("unknown MemoryNode edge %s", name)
+}
+
+// MemoryNodeUserMutation represents an operation that mutates the MemoryNodeUser nodes in the graph.
+type MemoryNodeUserMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *int
+	clearedFields      map[string]struct{}
+	memory_node        *int
+	clearedmemory_node bool
+	user               *int
+	cleareduser        bool
+	done               bool
+	oldValue           func(context.Context) (*MemoryNodeUser, error)
+	predicates         []predicate.MemoryNodeUser
+}
+
+var _ ent.Mutation = (*MemoryNodeUserMutation)(nil)
+
+// memorynodeuserOption allows management of the mutation configuration using functional options.
+type memorynodeuserOption func(*MemoryNodeUserMutation)
+
+// newMemoryNodeUserMutation creates new mutation for the MemoryNodeUser entity.
+func newMemoryNodeUserMutation(c config, op Op, opts ...memorynodeuserOption) *MemoryNodeUserMutation {
+	m := &MemoryNodeUserMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMemoryNodeUser,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMemoryNodeUserID sets the ID field of the mutation.
+func withMemoryNodeUserID(id int) memorynodeuserOption {
+	return func(m *MemoryNodeUserMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MemoryNodeUser
+		)
+		m.oldValue = func(ctx context.Context) (*MemoryNodeUser, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MemoryNodeUser.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMemoryNodeUser sets the old MemoryNodeUser of the mutation.
+func withMemoryNodeUser(node *MemoryNodeUser) memorynodeuserOption {
+	return func(m *MemoryNodeUserMutation) {
+		m.oldValue = func(context.Context) (*MemoryNodeUser, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MemoryNodeUserMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MemoryNodeUserMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MemoryNodeUser entities.
+func (m *MemoryNodeUserMutation) SetID(id int) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MemoryNodeUserMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MemoryNodeUserMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MemoryNodeUser.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetMemoryNodeID sets the "memory_node_id" field.
+func (m *MemoryNodeUserMutation) SetMemoryNodeID(i int) {
+	m.memory_node = &i
+}
+
+// MemoryNodeID returns the value of the "memory_node_id" field in the mutation.
+func (m *MemoryNodeUserMutation) MemoryNodeID() (r int, exists bool) {
+	v := m.memory_node
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMemoryNodeID returns the old "memory_node_id" field's value of the MemoryNodeUser entity.
+// If the MemoryNodeUser object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MemoryNodeUserMutation) OldMemoryNodeID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMemoryNodeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMemoryNodeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMemoryNodeID: %w", err)
+	}
+	return oldValue.MemoryNodeID, nil
+}
+
+// ResetMemoryNodeID resets all changes to the "memory_node_id" field.
+func (m *MemoryNodeUserMutation) ResetMemoryNodeID() {
+	m.memory_node = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *MemoryNodeUserMutation) SetUserID(i int) {
+	m.user = &i
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *MemoryNodeUserMutation) UserID() (r int, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the MemoryNodeUser entity.
+// If the MemoryNodeUser object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MemoryNodeUserMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *MemoryNodeUserMutation) ResetUserID() {
+	m.user = nil
+}
+
+// ClearMemoryNode clears the "memory_node" edge to the MemoryNode entity.
+func (m *MemoryNodeUserMutation) ClearMemoryNode() {
+	m.clearedmemory_node = true
+	m.clearedFields[memorynodeuser.FieldMemoryNodeID] = struct{}{}
+}
+
+// MemoryNodeCleared reports if the "memory_node" edge to the MemoryNode entity was cleared.
+func (m *MemoryNodeUserMutation) MemoryNodeCleared() bool {
+	return m.clearedmemory_node
+}
+
+// MemoryNodeIDs returns the "memory_node" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// MemoryNodeID instead. It exists only for internal usage by the builders.
+func (m *MemoryNodeUserMutation) MemoryNodeIDs() (ids []int) {
+	if id := m.memory_node; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetMemoryNode resets all changes to the "memory_node" edge.
+func (m *MemoryNodeUserMutation) ResetMemoryNode() {
+	m.memory_node = nil
+	m.clearedmemory_node = false
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *MemoryNodeUserMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[memorynodeuser.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *MemoryNodeUserMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *MemoryNodeUserMutation) UserIDs() (ids []int) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *MemoryNodeUserMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// Where appends a list predicates to the MemoryNodeUserMutation builder.
+func (m *MemoryNodeUserMutation) Where(ps ...predicate.MemoryNodeUser) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MemoryNodeUserMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MemoryNodeUserMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MemoryNodeUser, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MemoryNodeUserMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MemoryNodeUserMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MemoryNodeUser).
+func (m *MemoryNodeUserMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MemoryNodeUserMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.memory_node != nil {
+		fields = append(fields, memorynodeuser.FieldMemoryNodeID)
+	}
+	if m.user != nil {
+		fields = append(fields, memorynodeuser.FieldUserID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MemoryNodeUserMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case memorynodeuser.FieldMemoryNodeID:
+		return m.MemoryNodeID()
+	case memorynodeuser.FieldUserID:
+		return m.UserID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MemoryNodeUserMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case memorynodeuser.FieldMemoryNodeID:
+		return m.OldMemoryNodeID(ctx)
+	case memorynodeuser.FieldUserID:
+		return m.OldUserID(ctx)
+	}
+	return nil, fmt.Errorf("unknown MemoryNodeUser field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MemoryNodeUserMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case memorynodeuser.FieldMemoryNodeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMemoryNodeID(v)
+		return nil
+	case memorynodeuser.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MemoryNodeUser field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MemoryNodeUserMutation) AddedFields() []string {
+	var fields []string
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MemoryNodeUserMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MemoryNodeUserMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown MemoryNodeUser numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MemoryNodeUserMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MemoryNodeUserMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MemoryNodeUserMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown MemoryNodeUser nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MemoryNodeUserMutation) ResetField(name string) error {
+	switch name {
+	case memorynodeuser.FieldMemoryNodeID:
+		m.ResetMemoryNodeID()
+		return nil
+	case memorynodeuser.FieldUserID:
+		m.ResetUserID()
+		return nil
+	}
+	return fmt.Errorf("unknown MemoryNodeUser field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MemoryNodeUserMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.memory_node != nil {
+		edges = append(edges, memorynodeuser.EdgeMemoryNode)
+	}
+	if m.user != nil {
+		edges = append(edges, memorynodeuser.EdgeUser)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MemoryNodeUserMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case memorynodeuser.EdgeMemoryNode:
+		if id := m.memory_node; id != nil {
+			return []ent.Value{*id}
+		}
+	case memorynodeuser.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MemoryNodeUserMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MemoryNodeUserMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MemoryNodeUserMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedmemory_node {
+		edges = append(edges, memorynodeuser.EdgeMemoryNode)
+	}
+	if m.cleareduser {
+		edges = append(edges, memorynodeuser.EdgeUser)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MemoryNodeUserMutation) EdgeCleared(name string) bool {
+	switch name {
+	case memorynodeuser.EdgeMemoryNode:
+		return m.clearedmemory_node
+	case memorynodeuser.EdgeUser:
+		return m.cleareduser
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MemoryNodeUserMutation) ClearEdge(name string) error {
+	switch name {
+	case memorynodeuser.EdgeMemoryNode:
+		m.ClearMemoryNode()
+		return nil
+	case memorynodeuser.EdgeUser:
+		m.ClearUser()
+		return nil
+	}
+	return fmt.Errorf("unknown MemoryNodeUser unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MemoryNodeUserMutation) ResetEdge(name string) error {
+	switch name {
+	case memorynodeuser.EdgeMemoryNode:
+		m.ResetMemoryNode()
+		return nil
+	case memorynodeuser.EdgeUser:
+		m.ResetUser()
+		return nil
+	}
+	return fmt.Errorf("unknown MemoryNodeUser edge %s", name)
 }
 
 // RefreshTokenMutation represents an operation that mutates the RefreshToken nodes in the graph.
@@ -3672,29 +5485,38 @@ func (m *RefreshTokenMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                    Op
-	typ                   string
-	id                    *int
-	name                  *string
-	email                 *string
-	password              *string
-	role                  *schema.UserRole
-	clearedFields         map[string]struct{}
-	refresh_tokens        map[string]struct{}
-	removedrefresh_tokens map[string]struct{}
-	clearedrefresh_tokens bool
-	memory_nodes          map[int]struct{}
-	removedmemory_nodes   map[int]struct{}
-	clearedmemory_nodes   bool
-	cards                 map[int]struct{}
-	removedcards          map[int]struct{}
-	clearedcards          bool
-	card_items            map[int]struct{}
-	removedcard_items     map[int]struct{}
-	clearedcard_items     bool
-	done                  bool
-	oldValue              func(context.Context) (*User, error)
-	predicates            []predicate.User
+	op                       Op
+	typ                      string
+	id                       *int
+	name                     *string
+	email                    *string
+	password                 *string
+	role                     *schema.UserRole
+	clearedFields            map[string]struct{}
+	refresh_tokens           map[string]struct{}
+	removedrefresh_tokens    map[string]struct{}
+	clearedrefresh_tokens    bool
+	memory_nodes             map[int]struct{}
+	removedmemory_nodes      map[int]struct{}
+	clearedmemory_nodes      bool
+	cards                    map[int]struct{}
+	removedcards             map[int]struct{}
+	clearedcards             bool
+	card_items               map[int]struct{}
+	removedcard_items        map[int]struct{}
+	clearedcard_items        bool
+	card_user_counts         map[int]struct{}
+	removedcard_user_counts  map[int]struct{}
+	clearedcard_user_counts  bool
+	card_users               map[int]struct{}
+	removedcard_users        map[int]struct{}
+	clearedcard_users        bool
+	memory_node_users        map[int]struct{}
+	removedmemory_node_users map[int]struct{}
+	clearedmemory_node_users bool
+	done                     bool
+	oldValue                 func(context.Context) (*User, error)
+	predicates               []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -4161,6 +5983,168 @@ func (m *UserMutation) ResetCardItems() {
 	m.removedcard_items = nil
 }
 
+// AddCardUserCountIDs adds the "card_user_counts" edge to the CardUserCount entity by ids.
+func (m *UserMutation) AddCardUserCountIDs(ids ...int) {
+	if m.card_user_counts == nil {
+		m.card_user_counts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.card_user_counts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCardUserCounts clears the "card_user_counts" edge to the CardUserCount entity.
+func (m *UserMutation) ClearCardUserCounts() {
+	m.clearedcard_user_counts = true
+}
+
+// CardUserCountsCleared reports if the "card_user_counts" edge to the CardUserCount entity was cleared.
+func (m *UserMutation) CardUserCountsCleared() bool {
+	return m.clearedcard_user_counts
+}
+
+// RemoveCardUserCountIDs removes the "card_user_counts" edge to the CardUserCount entity by IDs.
+func (m *UserMutation) RemoveCardUserCountIDs(ids ...int) {
+	if m.removedcard_user_counts == nil {
+		m.removedcard_user_counts = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.card_user_counts, ids[i])
+		m.removedcard_user_counts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCardUserCounts returns the removed IDs of the "card_user_counts" edge to the CardUserCount entity.
+func (m *UserMutation) RemovedCardUserCountsIDs() (ids []int) {
+	for id := range m.removedcard_user_counts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CardUserCountsIDs returns the "card_user_counts" edge IDs in the mutation.
+func (m *UserMutation) CardUserCountsIDs() (ids []int) {
+	for id := range m.card_user_counts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCardUserCounts resets all changes to the "card_user_counts" edge.
+func (m *UserMutation) ResetCardUserCounts() {
+	m.card_user_counts = nil
+	m.clearedcard_user_counts = false
+	m.removedcard_user_counts = nil
+}
+
+// AddCardUserIDs adds the "card_users" edge to the CardUser entity by ids.
+func (m *UserMutation) AddCardUserIDs(ids ...int) {
+	if m.card_users == nil {
+		m.card_users = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.card_users[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCardUsers clears the "card_users" edge to the CardUser entity.
+func (m *UserMutation) ClearCardUsers() {
+	m.clearedcard_users = true
+}
+
+// CardUsersCleared reports if the "card_users" edge to the CardUser entity was cleared.
+func (m *UserMutation) CardUsersCleared() bool {
+	return m.clearedcard_users
+}
+
+// RemoveCardUserIDs removes the "card_users" edge to the CardUser entity by IDs.
+func (m *UserMutation) RemoveCardUserIDs(ids ...int) {
+	if m.removedcard_users == nil {
+		m.removedcard_users = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.card_users, ids[i])
+		m.removedcard_users[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCardUsers returns the removed IDs of the "card_users" edge to the CardUser entity.
+func (m *UserMutation) RemovedCardUsersIDs() (ids []int) {
+	for id := range m.removedcard_users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CardUsersIDs returns the "card_users" edge IDs in the mutation.
+func (m *UserMutation) CardUsersIDs() (ids []int) {
+	for id := range m.card_users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCardUsers resets all changes to the "card_users" edge.
+func (m *UserMutation) ResetCardUsers() {
+	m.card_users = nil
+	m.clearedcard_users = false
+	m.removedcard_users = nil
+}
+
+// AddMemoryNodeUserIDs adds the "memory_node_users" edge to the MemoryNodeUser entity by ids.
+func (m *UserMutation) AddMemoryNodeUserIDs(ids ...int) {
+	if m.memory_node_users == nil {
+		m.memory_node_users = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.memory_node_users[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMemoryNodeUsers clears the "memory_node_users" edge to the MemoryNodeUser entity.
+func (m *UserMutation) ClearMemoryNodeUsers() {
+	m.clearedmemory_node_users = true
+}
+
+// MemoryNodeUsersCleared reports if the "memory_node_users" edge to the MemoryNodeUser entity was cleared.
+func (m *UserMutation) MemoryNodeUsersCleared() bool {
+	return m.clearedmemory_node_users
+}
+
+// RemoveMemoryNodeUserIDs removes the "memory_node_users" edge to the MemoryNodeUser entity by IDs.
+func (m *UserMutation) RemoveMemoryNodeUserIDs(ids ...int) {
+	if m.removedmemory_node_users == nil {
+		m.removedmemory_node_users = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.memory_node_users, ids[i])
+		m.removedmemory_node_users[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMemoryNodeUsers returns the removed IDs of the "memory_node_users" edge to the MemoryNodeUser entity.
+func (m *UserMutation) RemovedMemoryNodeUsersIDs() (ids []int) {
+	for id := range m.removedmemory_node_users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MemoryNodeUsersIDs returns the "memory_node_users" edge IDs in the mutation.
+func (m *UserMutation) MemoryNodeUsersIDs() (ids []int) {
+	for id := range m.memory_node_users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMemoryNodeUsers resets all changes to the "memory_node_users" edge.
+func (m *UserMutation) ResetMemoryNodeUsers() {
+	m.memory_node_users = nil
+	m.clearedmemory_node_users = false
+	m.removedmemory_node_users = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -4345,7 +6329,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 7)
 	if m.refresh_tokens != nil {
 		edges = append(edges, user.EdgeRefreshTokens)
 	}
@@ -4357,6 +6341,15 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.card_items != nil {
 		edges = append(edges, user.EdgeCardItems)
+	}
+	if m.card_user_counts != nil {
+		edges = append(edges, user.EdgeCardUserCounts)
+	}
+	if m.card_users != nil {
+		edges = append(edges, user.EdgeCardUsers)
+	}
+	if m.memory_node_users != nil {
+		edges = append(edges, user.EdgeMemoryNodeUsers)
 	}
 	return edges
 }
@@ -4389,13 +6382,31 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeCardUserCounts:
+		ids := make([]ent.Value, 0, len(m.card_user_counts))
+		for id := range m.card_user_counts {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeCardUsers:
+		ids := make([]ent.Value, 0, len(m.card_users))
+		for id := range m.card_users {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeMemoryNodeUsers:
+		ids := make([]ent.Value, 0, len(m.memory_node_users))
+		for id := range m.memory_node_users {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 7)
 	if m.removedrefresh_tokens != nil {
 		edges = append(edges, user.EdgeRefreshTokens)
 	}
@@ -4407,6 +6418,15 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedcard_items != nil {
 		edges = append(edges, user.EdgeCardItems)
+	}
+	if m.removedcard_user_counts != nil {
+		edges = append(edges, user.EdgeCardUserCounts)
+	}
+	if m.removedcard_users != nil {
+		edges = append(edges, user.EdgeCardUsers)
+	}
+	if m.removedmemory_node_users != nil {
+		edges = append(edges, user.EdgeMemoryNodeUsers)
 	}
 	return edges
 }
@@ -4439,13 +6459,31 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeCardUserCounts:
+		ids := make([]ent.Value, 0, len(m.removedcard_user_counts))
+		for id := range m.removedcard_user_counts {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeCardUsers:
+		ids := make([]ent.Value, 0, len(m.removedcard_users))
+		for id := range m.removedcard_users {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeMemoryNodeUsers:
+		ids := make([]ent.Value, 0, len(m.removedmemory_node_users))
+		for id := range m.removedmemory_node_users {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 7)
 	if m.clearedrefresh_tokens {
 		edges = append(edges, user.EdgeRefreshTokens)
 	}
@@ -4457,6 +6495,15 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedcard_items {
 		edges = append(edges, user.EdgeCardItems)
+	}
+	if m.clearedcard_user_counts {
+		edges = append(edges, user.EdgeCardUserCounts)
+	}
+	if m.clearedcard_users {
+		edges = append(edges, user.EdgeCardUsers)
+	}
+	if m.clearedmemory_node_users {
+		edges = append(edges, user.EdgeMemoryNodeUsers)
 	}
 	return edges
 }
@@ -4473,6 +6520,12 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedcards
 	case user.EdgeCardItems:
 		return m.clearedcard_items
+	case user.EdgeCardUserCounts:
+		return m.clearedcard_user_counts
+	case user.EdgeCardUsers:
+		return m.clearedcard_users
+	case user.EdgeMemoryNodeUsers:
+		return m.clearedmemory_node_users
 	}
 	return false
 }
@@ -4500,6 +6553,15 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeCardItems:
 		m.ResetCardItems()
+		return nil
+	case user.EdgeCardUserCounts:
+		m.ResetCardUserCounts()
+		return nil
+	case user.EdgeCardUsers:
+		m.ResetCardUsers()
+		return nil
+	case user.EdgeMemoryNodeUsers:
+		m.ResetMemoryNodeUsers()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

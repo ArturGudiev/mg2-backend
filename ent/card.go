@@ -49,9 +49,13 @@ type Card struct {
 type CardEdges struct {
 	// User holds the value of the user edge.
 	User *User `json:"user,omitempty"`
+	// UserCounts holds the value of the user_counts edge.
+	UserCounts []*CardUserCount `json:"user_counts,omitempty"`
+	// CardUsers holds the value of the card_users edge.
+	CardUsers []*CardUser `json:"card_users,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -63,6 +67,24 @@ func (e CardEdges) UserOrErr() (*User, error) {
 		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "user"}
+}
+
+// UserCountsOrErr returns the UserCounts value or an error if the edge
+// was not loaded in eager-loading.
+func (e CardEdges) UserCountsOrErr() ([]*CardUserCount, error) {
+	if e.loadedTypes[1] {
+		return e.UserCounts, nil
+	}
+	return nil, &NotLoadedError{edge: "user_counts"}
+}
+
+// CardUsersOrErr returns the CardUsers value or an error if the edge
+// was not loaded in eager-loading.
+func (e CardEdges) CardUsersOrErr() ([]*CardUser, error) {
+	if e.loadedTypes[2] {
+		return e.CardUsers, nil
+	}
+	return nil, &NotLoadedError{edge: "card_users"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -181,6 +203,16 @@ func (_m *Card) Value(name string) (ent.Value, error) {
 // QueryUser queries the "user" edge of the Card entity.
 func (_m *Card) QueryUser() *UserQuery {
 	return NewCardClient(_m.config).QueryUser(_m)
+}
+
+// QueryUserCounts queries the "user_counts" edge of the Card entity.
+func (_m *Card) QueryUserCounts() *CardUserCountQuery {
+	return NewCardClient(_m.config).QueryUserCounts(_m)
+}
+
+// QueryCardUsers queries the "card_users" edge of the Card entity.
+func (_m *Card) QueryCardUsers() *CardUserQuery {
+	return NewCardClient(_m.config).QueryCardUsers(_m)
 }
 
 // Update returns a builder for updating this Card.

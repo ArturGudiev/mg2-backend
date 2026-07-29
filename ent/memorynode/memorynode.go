@@ -32,6 +32,8 @@ const (
 	FieldUserID = "user_id"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
+	// EdgeMemoryNodeUsers holds the string denoting the memory_node_users edge name in mutations.
+	EdgeMemoryNodeUsers = "memory_node_users"
 	// Table holds the table name of the memorynode in the database.
 	Table = "memory_nodes"
 	// UserTable is the table that holds the user relation/edge.
@@ -41,6 +43,13 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_id"
+	// MemoryNodeUsersTable is the table that holds the memory_node_users relation/edge.
+	MemoryNodeUsersTable = "memory_node_users"
+	// MemoryNodeUsersInverseTable is the table name for the MemoryNodeUser entity.
+	// It exists in this package in order to avoid circular dependency with the "memorynodeuser" package.
+	MemoryNodeUsersInverseTable = "memory_node_users"
+	// MemoryNodeUsersColumn is the table column denoting the memory_node_users relation/edge.
+	MemoryNodeUsersColumn = "memory_node_id"
 )
 
 // Columns holds all SQL columns for memorynode fields.
@@ -115,10 +124,31 @@ func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByMemoryNodeUsersCount orders the results by memory_node_users count.
+func ByMemoryNodeUsersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMemoryNodeUsersStep(), opts...)
+	}
+}
+
+// ByMemoryNodeUsers orders the results by memory_node_users terms.
+func ByMemoryNodeUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMemoryNodeUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+	)
+}
+func newMemoryNodeUsersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MemoryNodeUsersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MemoryNodeUsersTable, MemoryNodeUsersColumn),
 	)
 }

@@ -5,7 +5,10 @@ package ent
 import (
 	"arturgudiev/memoryguard/ent/card"
 	"arturgudiev/memoryguard/ent/carditem"
+	"arturgudiev/memoryguard/ent/carduser"
+	"arturgudiev/memoryguard/ent/cardusercount"
 	"arturgudiev/memoryguard/ent/memorynode"
+	"arturgudiev/memoryguard/ent/memorynodeuser"
 	"arturgudiev/memoryguard/ent/refreshtoken"
 	"arturgudiev/memoryguard/ent/schema"
 	"arturgudiev/memoryguard/ent/user"
@@ -72,6 +75,38 @@ func init() {
 	carditemDescID := carditemFields[0].Descriptor()
 	// carditem.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	carditem.IDValidator = carditemDescID.Validators[0].(func(int) error)
+	carduserFields := schema.CardUser{}.Fields()
+	_ = carduserFields
+	// carduserDescCardID is the schema descriptor for card_id field.
+	carduserDescCardID := carduserFields[1].Descriptor()
+	// carduser.CardIDValidator is a validator for the "card_id" field. It is called by the builders before save.
+	carduser.CardIDValidator = carduserDescCardID.Validators[0].(func(int) error)
+	// carduserDescUserID is the schema descriptor for user_id field.
+	carduserDescUserID := carduserFields[2].Descriptor()
+	// carduser.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	carduser.UserIDValidator = carduserDescUserID.Validators[0].(func(int) error)
+	// carduserDescID is the schema descriptor for id field.
+	carduserDescID := carduserFields[0].Descriptor()
+	// carduser.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	carduser.IDValidator = carduserDescID.Validators[0].(func(int) error)
+	cardusercountFields := schema.CardUserCount{}.Fields()
+	_ = cardusercountFields
+	// cardusercountDescCardID is the schema descriptor for card_id field.
+	cardusercountDescCardID := cardusercountFields[1].Descriptor()
+	// cardusercount.CardIDValidator is a validator for the "card_id" field. It is called by the builders before save.
+	cardusercount.CardIDValidator = cardusercountDescCardID.Validators[0].(func(int) error)
+	// cardusercountDescUserID is the schema descriptor for user_id field.
+	cardusercountDescUserID := cardusercountFields[2].Descriptor()
+	// cardusercount.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	cardusercount.UserIDValidator = cardusercountDescUserID.Validators[0].(func(int) error)
+	// cardusercountDescCount is the schema descriptor for count field.
+	cardusercountDescCount := cardusercountFields[3].Descriptor()
+	// cardusercount.DefaultCount holds the default value on creation for the count field.
+	cardusercount.DefaultCount = cardusercountDescCount.Default.(int)
+	// cardusercountDescID is the schema descriptor for id field.
+	cardusercountDescID := cardusercountFields[0].Descriptor()
+	// cardusercount.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	cardusercount.IDValidator = cardusercountDescID.Validators[0].(func(int) error)
 	memorynodeFields := schema.MemoryNode{}.Fields()
 	_ = memorynodeFields
 	// memorynodeDescName is the schema descriptor for name field.
@@ -106,6 +141,20 @@ func init() {
 	memorynodeDescID := memorynodeFields[0].Descriptor()
 	// memorynode.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	memorynode.IDValidator = memorynodeDescID.Validators[0].(func(int) error)
+	memorynodeuserFields := schema.MemoryNodeUser{}.Fields()
+	_ = memorynodeuserFields
+	// memorynodeuserDescMemoryNodeID is the schema descriptor for memory_node_id field.
+	memorynodeuserDescMemoryNodeID := memorynodeuserFields[1].Descriptor()
+	// memorynodeuser.MemoryNodeIDValidator is a validator for the "memory_node_id" field. It is called by the builders before save.
+	memorynodeuser.MemoryNodeIDValidator = memorynodeuserDescMemoryNodeID.Validators[0].(func(int) error)
+	// memorynodeuserDescUserID is the schema descriptor for user_id field.
+	memorynodeuserDescUserID := memorynodeuserFields[2].Descriptor()
+	// memorynodeuser.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	memorynodeuser.UserIDValidator = memorynodeuserDescUserID.Validators[0].(func(int) error)
+	// memorynodeuserDescID is the schema descriptor for id field.
+	memorynodeuserDescID := memorynodeuserFields[0].Descriptor()
+	// memorynodeuser.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	memorynodeuser.IDValidator = memorynodeuserDescID.Validators[0].(func(int) error)
 	refreshtokenFields := schema.RefreshToken{}.Fields()
 	_ = refreshtokenFields
 	// refreshtokenDescUserID is the schema descriptor for user_id field.

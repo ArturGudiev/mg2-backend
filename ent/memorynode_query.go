@@ -4,9 +4,11 @@ package ent
 
 import (
 	"arturgudiev/memoryguard/ent/memorynode"
+	"arturgudiev/memoryguard/ent/memorynodeuser"
 	"arturgudiev/memoryguard/ent/predicate"
 	"arturgudiev/memoryguard/ent/user"
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -19,11 +21,12 @@ import (
 // MemoryNodeQuery is the builder for querying MemoryNode entities.
 type MemoryNodeQuery struct {
 	config
-	ctx        *QueryContext
-	order      []memorynode.OrderOption
-	inters     []Interceptor
-	predicates []predicate.MemoryNode
-	withUser   *UserQuery
+	ctx                 *QueryContext
+	order               []memorynode.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.MemoryNode
+	withUser            *UserQuery
+	withMemoryNodeUsers *MemoryNodeUserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,6 +78,28 @@ func (_q *MemoryNodeQuery) QueryUser() *UserQuery {
 			sqlgraph.From(memorynode.Table, memorynode.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, memorynode.UserTable, memorynode.UserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMemoryNodeUsers chains the current query on the "memory_node_users" edge.
+func (_q *MemoryNodeQuery) QueryMemoryNodeUsers() *MemoryNodeUserQuery {
+	query := (&MemoryNodeUserClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(memorynode.Table, memorynode.FieldID, selector),
+			sqlgraph.To(memorynodeuser.Table, memorynodeuser.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, memorynode.MemoryNodeUsersTable, memorynode.MemoryNodeUsersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -269,12 +294,13 @@ func (_q *MemoryNodeQuery) Clone() *MemoryNodeQuery {
 		return nil
 	}
 	return &MemoryNodeQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]memorynode.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.MemoryNode{}, _q.predicates...),
-		withUser:   _q.withUser.Clone(),
+		config:              _q.config,
+		ctx:                 _q.ctx.Clone(),
+		order:               append([]memorynode.OrderOption{}, _q.order...),
+		inters:              append([]Interceptor{}, _q.inters...),
+		predicates:          append([]predicate.MemoryNode{}, _q.predicates...),
+		withUser:            _q.withUser.Clone(),
+		withMemoryNodeUsers: _q.withMemoryNodeUsers.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -289,6 +315,17 @@ func (_q *MemoryNodeQuery) WithUser(opts ...func(*UserQuery)) *MemoryNodeQuery {
 		opt(query)
 	}
 	_q.withUser = query
+	return _q
+}
+
+// WithMemoryNodeUsers tells the query-builder to eager-load the nodes that are connected to
+// the "memory_node_users" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *MemoryNodeQuery) WithMemoryNodeUsers(opts ...func(*MemoryNodeUserQuery)) *MemoryNodeQuery {
+	query := (&MemoryNodeUserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withMemoryNodeUsers = query
 	return _q
 }
 
@@ -370,8 +407,9 @@ func (_q *MemoryNodeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*M
 	var (
 		nodes       = []*MemoryNode{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withUser != nil,
+			_q.withMemoryNodeUsers != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -395,6 +433,13 @@ func (_q *MemoryNodeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*M
 	if query := _q.withUser; query != nil {
 		if err := _q.loadUser(ctx, query, nodes, nil,
 			func(n *MemoryNode, e *User) { n.Edges.User = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withMemoryNodeUsers; query != nil {
+		if err := _q.loadMemoryNodeUsers(ctx, query, nodes,
+			func(n *MemoryNode) { n.Edges.MemoryNodeUsers = []*MemoryNodeUser{} },
+			func(n *MemoryNode, e *MemoryNodeUser) { n.Edges.MemoryNodeUsers = append(n.Edges.MemoryNodeUsers, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -427,6 +472,36 @@ func (_q *MemoryNodeQuery) loadUser(ctx context.Context, query *UserQuery, nodes
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (_q *MemoryNodeQuery) loadMemoryNodeUsers(ctx context.Context, query *MemoryNodeUserQuery, nodes []*MemoryNode, init func(*MemoryNode), assign func(*MemoryNode, *MemoryNodeUser)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*MemoryNode)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(memorynodeuser.FieldMemoryNodeID)
+	}
+	query.Where(predicate.MemoryNodeUser(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(memorynode.MemoryNodeUsersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.MemoryNodeID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "memory_node_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

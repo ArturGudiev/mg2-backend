@@ -77,6 +77,9 @@ func (User) Edges() []ent.Edge {
 		edge.To("memory_nodes", MemoryNode.Type),
 		edge.To("cards", Card.Type),
 		edge.To("card_items", CardItem.Type),
+		edge.To("card_user_counts", CardUserCount.Type),
+		edge.To("card_users", CardUser.Type),
+		edge.To("memory_node_users", MemoryNodeUser.Type),
 	}
 }
 

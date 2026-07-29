@@ -94,6 +94,8 @@ func (Card) Edges() []ent.Edge {
 			Unique().
 			Required().
 			Field("user_id"),
+		edge.To("user_counts", CardUserCount.Type),
+		edge.To("card_users", CardUser.Type),
 	}
 }
 

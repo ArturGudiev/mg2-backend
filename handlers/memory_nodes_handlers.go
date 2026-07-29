@@ -190,6 +190,29 @@ func (h *Handler) ListMemoryNodes(c *gin.Context) {
 	c.JSON(http.StatusOK, nodes)
 }
 
+// ListRootMemoryNodes handles GET /memory-nodes/roots
+// @Summary      List root memory nodes
+// @Description  Returns memory nodes with no parents for the authenticated user (including shared roots)
+// @Tags         memory-nodes
+// @Produce      json
+// @Success      200  {array}   models.MemoryNodeFull
+// @Failure      403  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Security     AccessTokenCookie
+// @Router       /memory-nodes/roots [get]
+func (h *Handler) ListRootMemoryNodes(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	nodes, err := h.App.MemoryNodesService.GetRoots(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, nodes)
+}
+
 // GetMemoryNodeByAlias handles GET /memory-node-by-alias/:alias and /node-by-alias/:alias
 // @Summary      Get memory node by alias
 // @Description  Finds a memory node by one of its aliases for the authenticated user

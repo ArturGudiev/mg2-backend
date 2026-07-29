@@ -32,6 +32,30 @@ func (f CardItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CardItemMutation", m)
 }
 
+// The CardUserFunc type is an adapter to allow the use of ordinary
+// function as CardUser mutator.
+type CardUserFunc func(context.Context, *ent.CardUserMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CardUserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CardUserMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CardUserMutation", m)
+}
+
+// The CardUserCountFunc type is an adapter to allow the use of ordinary
+// function as CardUserCount mutator.
+type CardUserCountFunc func(context.Context, *ent.CardUserCountMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CardUserCountFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CardUserCountMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CardUserCountMutation", m)
+}
+
 // The MemoryNodeFunc type is an adapter to allow the use of ordinary
 // function as MemoryNode mutator.
 type MemoryNodeFunc func(context.Context, *ent.MemoryNodeMutation) (ent.Value, error)
@@ -42,6 +66,18 @@ func (f MemoryNodeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MemoryNodeMutation", m)
+}
+
+// The MemoryNodeUserFunc type is an adapter to allow the use of ordinary
+// function as MemoryNodeUser mutator.
+type MemoryNodeUserFunc func(context.Context, *ent.MemoryNodeUserMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MemoryNodeUserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MemoryNodeUserMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MemoryNodeUserMutation", m)
 }
 
 // The RefreshTokenFunc type is an adapter to allow the use of ordinary
