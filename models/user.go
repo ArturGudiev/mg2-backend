@@ -13,6 +13,14 @@ type LoginUserResponse struct {
 	User         UserResponse `json:"user"`
 }
 
+// OAuthTokenResponse is the OAuth2 password-grant response used by Swagger Authorize.
+type OAuthTokenResponse struct {
+	AccessToken  string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	TokenType    string `json:"token_type" example:"bearer"`
+	ExpiresIn    int    `json:"expires_in" example:"900"`
+	RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+}
+
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refreshToken"`
 }

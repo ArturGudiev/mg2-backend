@@ -4,41 +4,44 @@ import "arturgudiev/memoryguard/ent/schema"
 
 // MemoryNodeFull is the API representation of a memory node.
 type MemoryNodeFull struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Children   []int                  `json:"children"`
-	Parents    []int                  `json:"parents"`
-	Cards      []int                  `json:"cards"`
-	Aliases    []string               `json:"aliases"`
-	Priorities []schema.CardsPriority `json:"priorities"`
-	Groups     []schema.CardsGroup    `json:"groups"`
-	Shared     bool                   `json:"shared"`
-	UserID     int                    `json:"userId"`
+	ID          int                    `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Children    []int                  `json:"children"`
+	Parents     []int                  `json:"parents"`
+	Cards       []int                  `json:"cards"`
+	Aliases     []string               `json:"aliases"`
+	Priorities  []schema.CardsPriority `json:"priorities"`
+	Groups      []schema.CardsGroup    `json:"groups"`
+	Shared      bool                   `json:"shared"`
+	UserID      int                    `json:"userId"`
 }
 
 // MemoryNodeShort is used when creating a memory node.
 type MemoryNodeShort struct {
-	Name     string   `json:"name" binding:"required"`
-	Parents  []int    `json:"parents"`
-	Aliases  []string `json:"aliases"`
-	Shared   bool     `json:"shared"`
-	UserID   int      `json:"userId"`
-	Children []int    `json:"children"`
-	Cards    []int    `json:"cards"`
+	Name        string   `json:"name" binding:"required"`
+	Description string   `json:"description"`
+	Parents     []int    `json:"parents"`
+	Aliases     []string `json:"aliases"`
+	Shared      bool     `json:"shared"`
+	UserID      int      `json:"userId"`
+	Children    []int    `json:"children"`
+	Cards       []int    `json:"cards"`
 }
 
 // MemoryNodePartial is used when partially updating a memory node.
 type MemoryNodePartial struct {
-	ID         int                     `json:"id" binding:"required"`
-	Name       *string                 `json:"name"`
-	Children   *[]int                  `json:"children"`
-	Parents    *[]int                  `json:"parents"`
-	Cards      *[]int                  `json:"cards"`
-	Aliases    *[]string               `json:"aliases"`
-	Priorities *[]schema.CardsPriority `json:"priorities"`
-	Groups     *[]schema.CardsGroup    `json:"groups"`
-	Shared     *bool                   `json:"shared"`
-	UserID     *int                    `json:"userId"`
+	ID          int                     `json:"id" binding:"required"`
+	Name        *string                 `json:"name"`
+	Description *string                 `json:"description"`
+	Children    *[]int                  `json:"children"`
+	Parents     *[]int                  `json:"parents"`
+	Cards       *[]int                  `json:"cards"`
+	Aliases     *[]string               `json:"aliases"`
+	Priorities  *[]schema.CardsPriority `json:"priorities"`
+	Groups      *[]schema.CardsGroup    `json:"groups"`
+	Shared      *bool                   `json:"shared"`
+	UserID      *int                    `json:"userId"`
 }
 
 // NewMemoryNodeRequest creates a memory node and optionally links it to parents.
@@ -50,4 +53,23 @@ type NewMemoryNodeRequest struct {
 type MemoryNodePathItem struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
+}
+
+// GrantMemoryNodeAccessRequest grants a user access to a shared memory node.
+type GrantMemoryNodeAccessRequest struct {
+	UserID int `json:"userId" binding:"required"`
+}
+
+// MoveSharedNodeToUserRequest grants a shared memory node (and its shared cards) to a user.
+// When Deep is true, the same grant is applied to shared descendants recursively.
+type MoveSharedNodeToUserRequest struct {
+	UserID int  `json:"userId" binding:"required"`
+	Deep   bool `json:"deep"`
+}
+
+// RemoveSharedNodeFromUserRequest revokes a user's shared access (deletes grant links only).
+// When Deep is true, the same revoke is applied to shared descendants recursively.
+type RemoveSharedNodeFromUserRequest struct {
+	UserID int  `json:"userId" binding:"required"`
+	Deep   bool `json:"deep"`
 }

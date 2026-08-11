@@ -19,7 +19,7 @@ import (
 // @title           MemoryGuard API
 // @version         1.0
 // @description     Memory nodes, cards, and card items API server.
-// @description     **Authentication:** Use `POST /users/login`, copy `accessToken` from the response, then click **Authorize** and paste it as the `access_token` cookie value. Alternatively, login from Swagger on the same host and cookies are sent automatically.
+// @description     **Authentication:** Click **Authorize**, enter your email as username and your password, then Authorize. Swagger will call `POST /users/token` and attach the access token as a Bearer header.
 
 // @contact.name   API Support
 // @contact.url    http://www.swagger.io/support
@@ -33,11 +33,11 @@ import (
 
 // @schemes   http https
 
-// @securityDefinitions.apikey AccessTokenCookie
-// @in cookie
-// @name access_token
+// @securitydefinitions.oauth2.password Login
+// @tokenUrl /users/token
+// @scope.api Access the MemoryGuard API
 
-// @security AccessTokenCookie
+// @security Login[api]
 
 func main() {
 	_ = godotenv.Load()
@@ -93,6 +93,7 @@ func main() {
 	// Swagger UI route
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, func(c *ginSwagger.Config) {
 		c.PersistAuthorization = true
+		c.Oauth2DefaultClientID = "swagger"
 	}))
 
 	h := handlers.NewHandler(application)
@@ -104,6 +105,7 @@ func main() {
 	router.GET("/users/:id", h.GetUser)
 	router.POST("/users", h.AddUser)
 	router.POST("/users/login", h.LoginUser)
+	router.POST("/users/token", h.IssueToken)
 	router.POST("/users/refresh", h.RefreshUserToken)
 	router.POST("/users/logout", h.LogoutUser)
 
@@ -118,6 +120,10 @@ func main() {
 	router.POST("/new-memory-node", h.NewMemoryNode)
 	router.PUT("/update-memory-node", h.UpdateMemoryNode)
 	router.DELETE("/memory-node/:id", h.DeleteMemoryNode)
+	router.POST("/memory-node/:id/cards", h.BulkNewTextCards)
+	router.POST("/memory-node/:id/users", h.GrantMemoryNodeAccess)
+	router.POST("/admin/memory-node/:id/move-to-user", h.MoveSharedNodeToUser)
+	router.POST("/admin/memory-node/:id/remove-from-user", h.RemoveSharedNodeFromUser)
 
 	// Cards
 	router.GET("/card/:id", h.GetCardByID)

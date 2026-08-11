@@ -23,6 +23,7 @@ const (
 	CardItemTypeFormula                   CardItemType = "FORMULA"
 	CardItemTypeImage                     CardItemType = "IMAGE"
 	CardItemTypeWordWithStress            CardItemType = "WORD_WITH_STRESS"
+	CardItemTypeMarkdown                  CardItemType = "MARKDOWN"
 )
 
 // Values returns all valid CardItemType values.
@@ -34,6 +35,7 @@ func (CardItemType) Values() []string {
 		string(CardItemTypeFormula),
 		string(CardItemTypeImage),
 		string(CardItemTypeWordWithStress),
+		string(CardItemTypeMarkdown),
 	}
 }
 

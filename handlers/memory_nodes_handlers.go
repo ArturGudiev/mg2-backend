@@ -87,7 +87,7 @@ func parsePositiveID(c *gin.Context, param string) (int, bool) {
 
 // GetMemoryNodeByID handles GET /memory-node/:id
 // @Summary      Get memory node by ID
-// @Description  Returns a memory node by its ID for the authenticated user
+// @Description  Returns a memory node by its ID if the authenticated user owns it or has an explicit shared grant
 // @Tags         memory-nodes
 // @Produce      json
 // @Param        id   path    int  true  "Memory node ID"
@@ -96,7 +96,7 @@ func parsePositiveID(c *gin.Context, param string) (int, bool) {
 // @Failure      403  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /memory-node/{id} [get]
 func (h *Handler) GetMemoryNodeByID(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -109,6 +109,10 @@ func (h *Handler) GetMemoryNodeByID(c *gin.Context) {
 	}
 	node, err := h.App.MemoryNodesService.Get(c.Request.Context(), id, userID)
 	if err != nil {
+		if errors.Is(err, repositories.ErrAccessDenied) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+			return
+		}
 		if ent.IsNotFound(err) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Memory node not found"})
 			return
@@ -130,7 +134,7 @@ func (h *Handler) GetMemoryNodeByID(c *gin.Context) {
 // @Failure      400      {object}  map[string]string
 // @Failure      403      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /get-memory-nodes [post]
 func (h *Handler) GetMemoryNodesByIDs(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -160,7 +164,7 @@ func (h *Handler) GetMemoryNodesByIDs(c *gin.Context) {
 // @Failure      400  {object}  map[string]string
 // @Failure      403  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /memory-nodes [get]
 func (h *Handler) ListMemoryNodes(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -192,13 +196,13 @@ func (h *Handler) ListMemoryNodes(c *gin.Context) {
 
 // ListRootMemoryNodes handles GET /memory-nodes/roots
 // @Summary      List root memory nodes
-// @Description  Returns memory nodes with no parents for the authenticated user (including shared roots)
+// @Description  Returns memory nodes with no parents for the authenticated user (owned or explicitly granted shared roots)
 // @Tags         memory-nodes
 // @Produce      json
 // @Success      200  {array}   models.MemoryNodeFull
 // @Failure      403  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /memory-nodes/roots [get]
 func (h *Handler) ListRootMemoryNodes(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -223,7 +227,7 @@ func (h *Handler) ListRootMemoryNodes(c *gin.Context) {
 // @Failure      403    {object}  map[string]string
 // @Failure      404    {object}  map[string]string
 // @Failure      500    {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /memory-node-by-alias/{alias} [get]
 func (h *Handler) GetMemoryNodeByAlias(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -254,7 +258,7 @@ func (h *Handler) GetMemoryNodeByAlias(c *gin.Context) {
 // @Failure      403  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /memory-node/{id}/parents-path [get]
 func (h *Handler) GetMemoryNodeParentsPath(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -288,7 +292,7 @@ func (h *Handler) GetMemoryNodeParentsPath(c *gin.Context) {
 // @Failure      400      {object}  map[string]string
 // @Failure      403      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /new-memory-node [post]
 func (h *Handler) NewMemoryNode(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -324,7 +328,7 @@ func (h *Handler) NewMemoryNode(c *gin.Context) {
 // @Failure      403      {object}  map[string]string
 // @Failure      404      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /update-memory-node [put]
 func (h *Handler) UpdateMemoryNode(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -353,7 +357,7 @@ func (h *Handler) UpdateMemoryNode(c *gin.Context) {
 
 // DeleteMemoryNode handles DELETE /memory-node/:id
 // @Summary      Delete memory node
-// @Description  Deletes a memory node by ID owned by the authenticated user
+// @Description  Deletes a memory node owned by the authenticated user. If the node is shared, also deletes owned child nodes, their cards, and all memory_node_users / card_users (and card_user_counts) links.
 // @Tags         memory-nodes
 // @Produce      json
 // @Param        id   path      int  true  "Memory node ID"
@@ -362,7 +366,7 @@ func (h *Handler) UpdateMemoryNode(c *gin.Context) {
 // @Failure      403  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /memory-node/{id} [delete]
 func (h *Handler) DeleteMemoryNode(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -379,6 +383,162 @@ func (h *Handler) DeleteMemoryNode(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+// GrantMemoryNodeAccess handles POST /memory-node/:id/users
+// @Summary      Grant shared memory node access
+// @Description  Creates a memory_node_users row (and card_users for shared cards on the node) so the user can see the shared node. Does not make the node visible to everyone.
+// @Tags         memory-nodes
+// @Accept       json
+// @Produce      json
+// @Param        id       path      int                                true  "Memory node ID"
+// @Param        request  body      models.GrantMemoryNodeAccessRequest true  "User to grant"
+// @Success      200      {object}  map[string]string
+// @Failure      400      {object}  map[string]string
+// @Failure      403      {object}  map[string]string
+// @Failure      404      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Security     Login[api]
+// @Router       /memory-node/{id}/users [post]
+func (h *Handler) GrantMemoryNodeAccess(c *gin.Context) {
+	actorID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	nodeID, ok := parsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+	var req models.GrantMemoryNodeAccessRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.UserID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "userId is required"})
+		return
+	}
+	if err := h.App.CardsService.GrantSharedNodeAccess(c.Request.Context(), nodeID, req.UserID, actorID); err != nil {
+		if ent.IsNotFound(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Memory node not found"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+// MoveSharedNodeToUser handles POST /admin/memory-node/:id/move-to-user
+// @Summary      Move shared memory node to user (admin)
+// @Description  Admin-only. Grants a shared memory node and its shared cards to a user. When deep=true, also grants shared descendants recursively.
+// @Tags         memory-nodes
+// @Accept       json
+// @Produce      json
+// @Param        id       path      int                                   true  "Memory node ID"
+// @Param        request  body      models.MoveSharedNodeToUserRequest    true  "Target user and deep flag"
+// @Success      200      {object}  map[string]string
+// @Failure      400      {object}  map[string]string
+// @Failure      403      {object}  map[string]string
+// @Failure      404      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Security     Login[api]
+// @Router       /admin/memory-node/{id}/move-to-user [post]
+func (h *Handler) MoveSharedNodeToUser(c *gin.Context) {
+	admin, ok := h.isAdmin(c)
+	if !ok {
+		return
+	}
+	if !admin {
+		c.JSON(http.StatusForbidden, gin.H{"error": "only admins can move shared nodes to users"})
+		return
+	}
+	nodeID, ok := parsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+	var req models.MoveSharedNodeToUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.UserID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "userId is required"})
+		return
+	}
+	if _, err := h.App.UsersRepository.GetUser(c.Request.Context(), req.UserID); err != nil {
+		if ent.IsNotFound(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.App.CardsService.MoveSharedNodeToUser(c.Request.Context(), nodeID, req.UserID, req.Deep); err != nil {
+		if ent.IsNotFound(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Memory node not found"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+// RemoveSharedNodeFromUser handles POST /admin/memory-node/:id/remove-from-user
+// @Summary      Remove shared memory node from user (admin)
+// @Description  Admin-only. Revokes a user's access by deleting memory_node_users / card_users (and card_user_counts) links. Does not delete the node or cards. When deep=true, also revokes shared descendants recursively.
+// @Tags         memory-nodes
+// @Accept       json
+// @Produce      json
+// @Param        id       path      int                                      true  "Memory node ID"
+// @Param        request  body      models.RemoveSharedNodeFromUserRequest   true  "Target user and deep flag"
+// @Success      200      {object}  map[string]string
+// @Failure      400      {object}  map[string]string
+// @Failure      403      {object}  map[string]string
+// @Failure      404      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Security     Login[api]
+// @Router       /admin/memory-node/{id}/remove-from-user [post]
+func (h *Handler) RemoveSharedNodeFromUser(c *gin.Context) {
+	admin, ok := h.isAdmin(c)
+	if !ok {
+		return
+	}
+	if !admin {
+		c.JSON(http.StatusForbidden, gin.H{"error": "only admins can remove shared nodes from users"})
+		return
+	}
+	nodeID, ok := parsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+	var req models.RemoveSharedNodeFromUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.UserID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "userId is required"})
+		return
+	}
+	if _, err := h.App.UsersRepository.GetUser(c.Request.Context(), req.UserID); err != nil {
+		if ent.IsNotFound(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.App.CardsService.RemoveSharedNodeFromUser(c.Request.Context(), nodeID, req.UserID, req.Deep); err != nil {
+		if ent.IsNotFound(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Memory node not found"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{})

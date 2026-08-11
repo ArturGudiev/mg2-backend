@@ -3382,6 +3382,7 @@ type MemoryNodeMutation struct {
 	typ                      string
 	id                       *int
 	name                     *string
+	description              *string
 	children                 *[]int
 	appendchildren           []int
 	parents                  *[]int
@@ -3544,6 +3545,55 @@ func (m *MemoryNodeMutation) OldName(ctx context.Context) (v string, err error) 
 // ResetName resets all changes to the "name" field.
 func (m *MemoryNodeMutation) ResetName() {
 	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *MemoryNodeMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *MemoryNodeMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the MemoryNode entity.
+// If the MemoryNode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MemoryNodeMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *MemoryNodeMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[memorynode.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *MemoryNodeMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[memorynode.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *MemoryNodeMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, memorynode.FieldDescription)
 }
 
 // SetChildren sets the "children" field.
@@ -4067,9 +4117,12 @@ func (m *MemoryNodeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MemoryNodeMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.name != nil {
 		fields = append(fields, memorynode.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, memorynode.FieldDescription)
 	}
 	if m.children != nil {
 		fields = append(fields, memorynode.FieldChildren)
@@ -4105,6 +4158,8 @@ func (m *MemoryNodeMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case memorynode.FieldName:
 		return m.Name()
+	case memorynode.FieldDescription:
+		return m.Description()
 	case memorynode.FieldChildren:
 		return m.Children()
 	case memorynode.FieldParents:
@@ -4132,6 +4187,8 @@ func (m *MemoryNodeMutation) OldField(ctx context.Context, name string) (ent.Val
 	switch name {
 	case memorynode.FieldName:
 		return m.OldName(ctx)
+	case memorynode.FieldDescription:
+		return m.OldDescription(ctx)
 	case memorynode.FieldChildren:
 		return m.OldChildren(ctx)
 	case memorynode.FieldParents:
@@ -4163,6 +4220,13 @@ func (m *MemoryNodeMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
+		return nil
+	case memorynode.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
 		return nil
 	case memorynode.FieldChildren:
 		v, ok := value.([]int)
@@ -4253,6 +4317,9 @@ func (m *MemoryNodeMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *MemoryNodeMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(memorynode.FieldDescription) {
+		fields = append(fields, memorynode.FieldDescription)
+	}
 	if m.FieldCleared(memorynode.FieldPriorities) {
 		fields = append(fields, memorynode.FieldPriorities)
 	}
@@ -4273,6 +4340,9 @@ func (m *MemoryNodeMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *MemoryNodeMutation) ClearField(name string) error {
 	switch name {
+	case memorynode.FieldDescription:
+		m.ClearDescription()
+		return nil
 	case memorynode.FieldPriorities:
 		m.ClearPriorities()
 		return nil
@@ -4289,6 +4359,9 @@ func (m *MemoryNodeMutation) ResetField(name string) error {
 	switch name {
 	case memorynode.FieldName:
 		m.ResetName()
+		return nil
+	case memorynode.FieldDescription:
+		m.ResetDescription()
 		return nil
 	case memorynode.FieldChildren:
 		m.ResetChildren()
@@ -5490,7 +5563,7 @@ type UserMutation struct {
 	id                       *int
 	name                     *string
 	email                    *string
-	password                 *string
+	password_hash            *string
 	role                     *schema.UserRole
 	clearedFields            map[string]struct{}
 	refresh_tokens           map[string]struct{}
@@ -5695,40 +5768,40 @@ func (m *UserMutation) ResetEmail() {
 	m.email = nil
 }
 
-// SetPassword sets the "password" field.
-func (m *UserMutation) SetPassword(s string) {
-	m.password = &s
+// SetPasswordHash sets the "password_hash" field.
+func (m *UserMutation) SetPasswordHash(s string) {
+	m.password_hash = &s
 }
 
-// Password returns the value of the "password" field in the mutation.
-func (m *UserMutation) Password() (r string, exists bool) {
-	v := m.password
+// PasswordHash returns the value of the "password_hash" field in the mutation.
+func (m *UserMutation) PasswordHash() (r string, exists bool) {
+	v := m.password_hash
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldPassword returns the old "password" field's value of the User entity.
+// OldPasswordHash returns the old "password_hash" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldPassword(ctx context.Context) (v string, err error) {
+func (m *UserMutation) OldPasswordHash(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldPassword is only allowed on UpdateOne operations")
+		return v, errors.New("OldPasswordHash is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldPassword requires an ID field in the mutation")
+		return v, errors.New("OldPasswordHash requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPassword: %w", err)
+		return v, fmt.Errorf("querying old value for OldPasswordHash: %w", err)
 	}
-	return oldValue.Password, nil
+	return oldValue.PasswordHash, nil
 }
 
-// ResetPassword resets all changes to the "password" field.
-func (m *UserMutation) ResetPassword() {
-	m.password = nil
+// ResetPasswordHash resets all changes to the "password_hash" field.
+func (m *UserMutation) ResetPasswordHash() {
+	m.password_hash = nil
 }
 
 // SetRole sets the "role" field.
@@ -6186,8 +6259,8 @@ func (m *UserMutation) Fields() []string {
 	if m.email != nil {
 		fields = append(fields, user.FieldEmail)
 	}
-	if m.password != nil {
-		fields = append(fields, user.FieldPassword)
+	if m.password_hash != nil {
+		fields = append(fields, user.FieldPasswordHash)
 	}
 	if m.role != nil {
 		fields = append(fields, user.FieldRole)
@@ -6204,8 +6277,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case user.FieldEmail:
 		return m.Email()
-	case user.FieldPassword:
-		return m.Password()
+	case user.FieldPasswordHash:
+		return m.PasswordHash()
 	case user.FieldRole:
 		return m.Role()
 	}
@@ -6221,8 +6294,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldName(ctx)
 	case user.FieldEmail:
 		return m.OldEmail(ctx)
-	case user.FieldPassword:
-		return m.OldPassword(ctx)
+	case user.FieldPasswordHash:
+		return m.OldPasswordHash(ctx)
 	case user.FieldRole:
 		return m.OldRole(ctx)
 	}
@@ -6248,12 +6321,12 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetEmail(v)
 		return nil
-	case user.FieldPassword:
+	case user.FieldPasswordHash:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetPassword(v)
+		m.SetPasswordHash(v)
 		return nil
 	case user.FieldRole:
 		v, ok := value.(schema.UserRole)
@@ -6317,8 +6390,8 @@ func (m *UserMutation) ResetField(name string) error {
 	case user.FieldEmail:
 		m.ResetEmail()
 		return nil
-	case user.FieldPassword:
-		m.ResetPassword()
+	case user.FieldPasswordHash:
+		m.ResetPasswordHash()
 		return nil
 	case user.FieldRole:
 		m.ResetRole()

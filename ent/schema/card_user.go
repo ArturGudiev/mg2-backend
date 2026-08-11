@@ -9,7 +9,7 @@ import (
 	"entgo.io/ent/schema/index"
 )
 
-// CardUser links a user to a shared card they use.
+// CardUser links a user to a shared card they are allowed to use.
 type CardUser struct {
 	ent.Schema
 }

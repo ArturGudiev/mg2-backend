@@ -48,6 +48,17 @@ type CardPartial struct {
 	Shared        *bool             `json:"shared"`
 }
 
+// TextCardInput is a question/answer text-item list for bulk text card creation.
+type TextCardInput struct {
+	QuestionTextItems []string `json:"questionTextItems" binding:"required,min=1"`
+	AnswerTextItems   []string `json:"answerTextItems" binding:"required,min=1"`
+}
+
+// BulkTextCardsRequest wraps a cards array in the JSON body.
+type BulkTextCardsRequest struct {
+	Cards []TextCardInput `json:"cards" binding:"required,min=1,dive"`
+}
+
 // NewCardRequest creates a card under a memory node (legacy-compatible shape).
 type NewCardRequest struct {
 	MemoryNodeID int             `json:"_id" binding:"required"`

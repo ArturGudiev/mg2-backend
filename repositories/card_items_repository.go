@@ -150,3 +150,15 @@ func (r *CardItemsRepository) DeleteByIDs(ctx context.Context, ids []int) error 
 	_, err := r.client.CardItem.Delete().Where(carditem.IDIn(ids...)).Exec(ctx)
 	return err
 }
+
+// EnsureShared marks the given card items as shared (no-op for already-shared or missing IDs).
+func (r *CardItemsRepository) EnsureShared(ctx context.Context, ids []int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	_, err := r.client.CardItem.Update().
+		Where(carditem.IDIn(ids...), carditem.SharedEQ(false)).
+		SetShared(true).
+		Save(ctx)
+	return err
+}

@@ -38,3 +38,34 @@ func (r *MemoryNodeUsersRepository) EnsureLink(ctx context.Context, memoryNodeID
 	}
 	return err
 }
+
+// ListUserIDs returns user IDs granted access to the memory node.
+func (r *MemoryNodeUsersRepository) ListUserIDs(ctx context.Context, memoryNodeID int) ([]int, error) {
+	rows, err := r.client.MemoryNodeUser.Query().
+		Where(memorynodeuser.MemoryNodeIDEQ(memoryNodeID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]int, 0, len(rows))
+	for _, row := range rows {
+		ids = append(ids, row.UserID)
+	}
+	return ids, nil
+}
+
+// DeleteByMemoryNodeID removes all grant rows for a memory node.
+func (r *MemoryNodeUsersRepository) DeleteByMemoryNodeID(ctx context.Context, memoryNodeID int) error {
+	_, err := r.client.MemoryNodeUser.Delete().
+		Where(memorynodeuser.MemoryNodeIDEQ(memoryNodeID)).
+		Exec(ctx)
+	return err
+}
+
+// DeleteLink removes the grant row for one user on a memory node (no-op if missing).
+func (r *MemoryNodeUsersRepository) DeleteLink(ctx context.Context, memoryNodeID, userID int) error {
+	_, err := r.client.MemoryNodeUser.Delete().
+		Where(memorynodeuser.MemoryNodeIDEQ(memoryNodeID), memorynodeuser.UserIDEQ(userID)).
+		Exec(ctx)
+	return err
+}

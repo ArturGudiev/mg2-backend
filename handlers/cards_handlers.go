@@ -25,7 +25,7 @@ func jsonNumberArray(raw string, dest *[]int) error {
 // @Failure      403  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /card/{id} [get]
 func (h *Handler) GetCardByID(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -58,7 +58,7 @@ func (h *Handler) GetCardByID(c *gin.Context) {
 // @Failure      400  {object}  map[string]string
 // @Failure      403  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /cards [get]
 func (h *Handler) ListCards(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -94,7 +94,7 @@ func (h *Handler) ListCards(c *gin.Context) {
 // @Failure      400      {object}  map[string]string
 // @Failure      403      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /get-cards [post]
 func (h *Handler) GetCardsByIDs(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -125,7 +125,7 @@ func (h *Handler) GetCardsByIDs(c *gin.Context) {
 // @Failure      400      {object}  map[string]string
 // @Failure      403      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /new-card [post]
 func (h *Handler) NewCard(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -148,6 +148,92 @@ func (h *Handler) NewCard(c *gin.Context) {
 	c.JSON(http.StatusOK, card)
 }
 
+func parseSharedFlag(c *gin.Context) bool {
+	switch c.Query("shared") {
+	case "1", "true", "TRUE":
+		return true
+	default:
+		return false
+	}
+}
+
+// BulkNewTextCards handles POST /memory-node/:id/cards
+// @Summary      Bulk create text cards
+// @Description  Creates multiple text-only cards under a memory node. Body may be a cards array or an object with cards. Each card requires questionTextItems and answerTextItems. Pass ?shared=true to mark all cards as shared.
+// @Tags         cards
+// @Accept       json
+// @Produce      json
+// @Param        id       path      int                         true  "Memory node ID"
+// @Param        shared   query     bool                        false "Mark all cards as shared"
+// @Param        request  body      models.BulkTextCardsRequest true  "Cards array or wrapper"
+// @Success      200      {array}   models.CardFull
+// @Failure      400      {object}  map[string]string
+// @Failure      403      {object}  map[string]string
+// @Failure      404      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Security     Login[api]
+// @Router       /memory-node/{id}/cards [post]
+func (h *Handler) BulkNewTextCards(c *gin.Context) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		return
+	}
+	nodeID, ok := parsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+
+	var raw json.RawMessage
+	if err := c.ShouldBindJSON(&raw); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if len(raw) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "request body is required"})
+		return
+	}
+
+	var cards []models.TextCardInput
+	switch raw[0] {
+	case '[':
+		if err := json.Unmarshal(raw, &cards); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	case '{':
+		var req models.BulkTextCardsRequest
+		if err := json.Unmarshal(raw, &req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		cards = req.Cards
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "body must be a cards array or object"})
+		return
+	}
+
+	if len(cards) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cards array must not be empty"})
+		return
+	}
+
+	shared := parseSharedFlag(c)
+	if !h.requireAdminForShared(c, shared) {
+		return
+	}
+
+	created, err := h.App.CardsService.CreateManyTextUnderNode(c.Request.Context(), nodeID, cards, shared, userID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Memory node not found"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, created)
+}
+
 // UpdateCard handles PUT /update-card
 // @Summary      Update card
 // @Description  Partially updates an existing card owned by the authenticated user
@@ -160,7 +246,7 @@ func (h *Handler) NewCard(c *gin.Context) {
 // @Failure      403      {object}  map[string]string
 // @Failure      404      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /update-card [put]
 func (h *Handler) UpdateCard(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -197,7 +283,7 @@ func (h *Handler) UpdateCard(c *gin.Context) {
 // @Success      200      {object}  map[string]string
 // @Failure      400      {object}  map[string]string
 // @Failure      403      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /update-cards-field [post]
 func (h *Handler) UpdateCardsField(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -218,7 +304,7 @@ func (h *Handler) UpdateCardsField(c *gin.Context) {
 
 // DeleteCards handles POST /delete-cards
 // @Summary      Delete cards
-// @Description  Deletes cards by IDs owned by the authenticated user and unlinks them from parent memory nodes
+// @Description  Deletes owned cards by IDs (including shared cards owned by the user). For shared cards the user only has a grant to, removes the grant/count records instead of deleting the card.
 // @Tags         cards
 // @Accept       json
 // @Produce      json
@@ -227,7 +313,7 @@ func (h *Handler) UpdateCardsField(c *gin.Context) {
 // @Failure      400      {object}  map[string]string
 // @Failure      403      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /delete-cards [post]
 func (h *Handler) DeleteCards(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -257,7 +343,7 @@ func (h *Handler) DeleteCards(c *gin.Context) {
 // @Failure      400      {object}  map[string]string
 // @Failure      403      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /cards-by-query [post]
 func (h *Handler) CardsByQuery(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -291,7 +377,7 @@ func (h *Handler) CardsByQuery(c *gin.Context) {
 // @Failure      400  {object}  map[string]string
 // @Failure      403  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /increase-card-count/{id} [put]
 func (h *Handler) IncreaseCardCount(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -324,7 +410,7 @@ func (h *Handler) IncreaseCardCount(c *gin.Context) {
 // @Failure      400  {object}  map[string]string
 // @Failure      403  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /decrease-card-count/{id} [put]
 func (h *Handler) DecreaseCardCount(c *gin.Context) {
 	userID, ok := currentUserID(c)

@@ -85,7 +85,7 @@ var (
 // TypeValidator is a validator for the "type" field enum values. It is called by the builders before save.
 func TypeValidator(_type schema.CardItemType) error {
 	switch _type.String() {
-	case "TEXT", "TEXT_WITH_HIGHLIGHTED_SYMBOL", "CODE", "FORMULA", "IMAGE", "WORD_WITH_STRESS":
+	case "TEXT", "TEXT_WITH_HIGHLIGHTED_SYMBOL", "CODE", "FORMULA", "IMAGE", "WORD_WITH_STRESS", "MARKDOWN":
 		return nil
 	default:
 		return fmt.Errorf("carditem: invalid enum value for type field: %q", _type)

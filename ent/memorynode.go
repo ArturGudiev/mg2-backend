@@ -21,6 +21,8 @@ type MemoryNode struct {
 	ID int `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// Description holds the value of the "description" field.
+	Description string `json:"description,omitempty"`
 	// Children holds the value of the "children" field.
 	Children []int `json:"children,omitempty"`
 	// Parents holds the value of the "parents" field.
@@ -85,7 +87,7 @@ func (*MemoryNode) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case memorynode.FieldID, memorynode.FieldUserID:
 			values[i] = new(sql.NullInt64)
-		case memorynode.FieldName:
+		case memorynode.FieldName, memorynode.FieldDescription:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -113,6 +115,12 @@ func (_m *MemoryNode) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				_m.Name = value.String
+			}
+		case memorynode.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				_m.Description = value.String
 			}
 		case memorynode.FieldChildren:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -222,6 +230,9 @@ func (_m *MemoryNode) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
+	builder.WriteString(", ")
+	builder.WriteString("description=")
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("children=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Children))

@@ -57,7 +57,7 @@ var (
 	// CardItemsColumns holds the columns for the "card_items" table.
 	CardItemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"TEXT", "TEXT_WITH_HIGHLIGHTED_SYMBOL", "CODE", "FORMULA", "IMAGE", "WORD_WITH_STRESS"}},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"TEXT", "TEXT_WITH_HIGHLIGHTED_SYMBOL", "CODE", "FORMULA", "IMAGE", "WORD_WITH_STRESS", "MARKDOWN"}},
 		{Name: "text", Type: field.TypeString, Nullable: true},
 		{Name: "index", Type: field.TypeInt, Nullable: true},
 		{Name: "code", Type: field.TypeString, Nullable: true, Size: 2147483647},
@@ -190,6 +190,7 @@ var (
 	MemoryNodesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Default: ""},
 		{Name: "children", Type: field.TypeJSON},
 		{Name: "parents", Type: field.TypeJSON},
 		{Name: "cards", Type: field.TypeJSON},
@@ -207,7 +208,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "memory_nodes_users_memory_nodes",
-				Columns:    []*schema.Column{MemoryNodesColumns[9]},
+				Columns:    []*schema.Column{MemoryNodesColumns[10]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -216,12 +217,12 @@ var (
 			{
 				Name:    "memorynode_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{MemoryNodesColumns[9]},
+				Columns: []*schema.Column{MemoryNodesColumns[10]},
 			},
 			{
 				Name:    "memorynode_shared",
 				Unique:  false,
-				Columns: []*schema.Column{MemoryNodesColumns[8]},
+				Columns: []*schema.Column{MemoryNodesColumns[9]},
 			},
 		},
 	}
@@ -295,7 +296,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "password", Type: field.TypeString},
+		{Name: "password_hash", Type: field.TypeString},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "user"}, Default: "user"},
 	}
 	// UsersTable holds the schema information for the "users" table.

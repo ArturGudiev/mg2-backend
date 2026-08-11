@@ -20,7 +20,7 @@ import (
 // @Failure      403  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /card-item/{id} [get]
 func (h *Handler) GetCardItemByID(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -54,7 +54,7 @@ func (h *Handler) GetCardItemByID(c *gin.Context) {
 // @Failure      400      {object}  map[string]string
 // @Failure      403      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /get-card-items [post]
 func (h *Handler) GetCardItemsByIDs(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -82,7 +82,7 @@ func (h *Handler) GetCardItemsByIDs(c *gin.Context) {
 // @Success      200  {array}   models.CardItemFull
 // @Failure      403  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /card-items [get]
 func (h *Handler) ListCardItems(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -107,7 +107,7 @@ func (h *Handler) ListCardItems(c *gin.Context) {
 // @Success      200      {object}  models.CardItemFull
 // @Failure      400      {object}  map[string]string
 // @Failure      403      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /new-card-item [post]
 func (h *Handler) NewCardItem(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -142,7 +142,7 @@ func (h *Handler) NewCardItem(c *gin.Context) {
 // @Failure      403      {object}  map[string]string
 // @Failure      404      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /update-card-item [put]
 func (h *Handler) UpdateCardItem(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -180,7 +180,7 @@ func (h *Handler) UpdateCardItem(c *gin.Context) {
 // @Failure      403  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /card-item/{id} [delete]
 func (h *Handler) DeleteCardItem(c *gin.Context) {
 	userID, ok := currentUserID(c)

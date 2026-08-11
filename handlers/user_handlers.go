@@ -31,7 +31,7 @@ func toUserResponse(user *ent.User) models.UserResponse {
 // @Failure      400      {object}  map[string]string
 // @Failure      403      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /users/{id} [get]
 func (h *Handler) GetUser(c *gin.Context) {
 	id := c.Param("id")
@@ -57,7 +57,7 @@ func (h *Handler) GetUser(c *gin.Context) {
 // @Success      200      {object}  models.UserResponse
 // @Failure      403      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
-// @Security     AccessTokenCookie
+// @Security     Login[api]
 // @Router       /users/me [get]
 func (h *Handler) GetMe(c *gin.Context) {
 	userID, ok := currentUserID(c)
@@ -106,7 +106,7 @@ func (h *Handler) AddUser(c *gin.Context) {
 
 // LoginUser handles POST /users/login
 // @Summary      Logs in a user
-// @Description  Logs in a user and returns tokens. Sets auth cookies. Copy accessToken into Authorize for other endpoints.
+// @Description  Logs in a user and returns tokens. Sets auth cookies.
 // @Tags         users
 // @Accept       json
 // @Produce      json
@@ -124,39 +124,92 @@ func (h *Handler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	foundUser, err := h.App.UsersRepository.GetUserByCredentials(ctx, req.Email, req.Password)
+	foundUser, accessToken, refreshToken, err := h.authenticateAndIssueTokens(c, req.Email, req.Password)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			c.JSON(401, gin.H{"error": "Invalid email or password"})
-			return
-		}
-		if ent.IsNotSingular(err) {
-			c.JSON(500, gin.H{"error": "Multiple users found for this email"})
-			return
-		}
-		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-
-	accessToken, refreshToken, refreshJTI, err := auth.GenerateTokenPair(foundUser.ID, foundUser.Email)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := h.App.RefreshTokensRepository.CreateRefreshToken(ctx, refreshJTI, foundUser.ID, auth.RefreshTokenExpiry()); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	auth.SetAuthCookies(c, accessToken, refreshToken)
 
 	c.JSON(200, models.LoginUserResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User:         toUserResponse(foundUser),
 	})
+}
+
+// IssueToken handles POST /users/token (OAuth2 password grant for Swagger Authorize).
+// @Summary      Issue OAuth2 access token
+// @Description  OAuth2 password grant. Use email as username. Used by Swagger Authorize.
+// @Tags         users
+// @Accept       application/x-www-form-urlencoded
+// @Produce      json
+// @Param        grant_type  formData  string  true  "Must be password"  Enums(password)
+// @Param        username    formData  string  true  "User email"
+// @Param        password    formData  string  true  "User password"
+// @Success      200  {object}  models.OAuthTokenResponse
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Security     []
+// @Router       /users/token [post]
+func (h *Handler) IssueToken(c *gin.Context) {
+	grantType := c.PostForm("grant_type")
+	if grantType == "" {
+		grantType = "password"
+	}
+	if grantType != "password" {
+		c.JSON(400, gin.H{"error": "unsupported_grant_type"})
+		return
+	}
+
+	username := c.PostForm("username")
+	password := c.PostForm("password")
+	if username == "" || password == "" {
+		c.JSON(400, gin.H{"error": "username and password are required"})
+		return
+	}
+
+	_, accessToken, refreshToken, err := h.authenticateAndIssueTokens(c, username, password)
+	if err != nil {
+		return
+	}
+
+	c.JSON(200, models.OAuthTokenResponse{
+		AccessToken:  accessToken,
+		TokenType:    "bearer",
+		ExpiresIn:    int(auth.AccessTokenTTL().Seconds()),
+		RefreshToken: refreshToken,
+	})
+}
+
+func (h *Handler) authenticateAndIssueTokens(c *gin.Context, email, password string) (*ent.User, string, string, error) {
+	ctx := c.Request.Context()
+	foundUser, err := h.App.UsersRepository.GetUserByCredentials(ctx, email, password)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			c.JSON(401, gin.H{"error": "Invalid email or password"})
+			return nil, "", "", err
+		}
+		if ent.IsNotSingular(err) {
+			c.JSON(500, gin.H{"error": "Multiple users found for this email"})
+			return nil, "", "", err
+		}
+		c.JSON(500, gin.H{"error": err.Error()})
+		return nil, "", "", err
+	}
+
+	accessToken, refreshToken, refreshJTI, err := auth.GenerateTokenPair(foundUser.ID, foundUser.Email)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return nil, "", "", err
+	}
+
+	if err := h.App.RefreshTokensRepository.CreateRefreshToken(ctx, refreshJTI, foundUser.ID, auth.RefreshTokenExpiry()); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return nil, "", "", err
+	}
+
+	auth.SetAuthCookies(c, accessToken, refreshToken)
+	return foundUser, accessToken, refreshToken, nil
 }
 
 // RefreshUserToken handles POST /users/refresh

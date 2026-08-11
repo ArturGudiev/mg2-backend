@@ -111,3 +111,8 @@ func (s *CardItemsService) Delete(ctx context.Context, id, userID int) error {
 func (s *CardItemsService) DeleteByIDs(ctx context.Context, ids []int) error {
 	return s.repo.DeleteByIDs(ctx, ids)
 }
+
+// EnsureShared marks card items as shared so grantees can resolve question/answer content.
+func (s *CardItemsService) EnsureShared(ctx context.Context, ids []int) error {
+	return s.repo.EnsureShared(ctx, ids)
+}

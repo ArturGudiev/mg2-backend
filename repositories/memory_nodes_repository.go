@@ -3,6 +3,7 @@ package repositories
 import (
 	"arturgudiev/memoryguard/ent"
 	"arturgudiev/memoryguard/ent/memorynode"
+	"arturgudiev/memoryguard/ent/memorynodeuser"
 	"arturgudiev/memoryguard/ent/predicate"
 	"arturgudiev/memoryguard/ent/schema"
 	"arturgudiev/memoryguard/models"
@@ -13,6 +14,9 @@ import (
 
 var ErrNotFound = errors.New("not found")
 
+// ErrAccessDenied is returned when a resource exists but the user may not access it.
+var ErrAccessDenied = errors.New("access denied")
+
 type MemoryNodesRepository struct {
 	client *ent.Client
 }
@@ -21,8 +25,15 @@ func NewMemoryNodesRepository(client *ent.Client) *MemoryNodesRepository {
 	return &MemoryNodesRepository{client: client}
 }
 
+// accessibleMemoryNode: owner, or shared node with an explicit memory_node_users row.
 func accessibleMemoryNode(userID int) predicate.MemoryNode {
-	return memorynode.Or(memorynode.UserIDEQ(userID), memorynode.SharedEQ(true))
+	return memorynode.Or(
+		memorynode.UserIDEQ(userID),
+		memorynode.And(
+			memorynode.SharedEQ(true),
+			memorynode.HasMemoryNodeUsersWith(memorynodeuser.UserIDEQ(userID)),
+		),
+	)
 }
 
 func (r *MemoryNodesRepository) GetAllByUser(ctx context.Context, userID int) ([]*ent.MemoryNode, error) {
@@ -48,11 +59,43 @@ func (r *MemoryNodesRepository) Get(ctx context.Context, id int) (*ent.MemoryNod
 	return r.client.MemoryNode.Get(ctx, id)
 }
 
-// GetForUser returns a node the user owns or that is shared.
+// GetForUser returns a node the user owns or a shared node they were granted.
 func (r *MemoryNodesRepository) GetForUser(ctx context.Context, id, userID int) (*ent.MemoryNode, error) {
 	return r.client.MemoryNode.Query().
 		Where(memorynode.IDEQ(id), accessibleMemoryNode(userID)).
 		Only(ctx)
+}
+
+// UserCanAccess reports whether the user owns the node or has an explicit shared grant.
+func (r *MemoryNodesRepository) UserCanAccess(ctx context.Context, id, userID int) (bool, error) {
+	return r.client.MemoryNode.Query().
+		Where(memorynode.IDEQ(id), accessibleMemoryNode(userID)).
+		Exist(ctx)
+}
+
+// FilterAccessibleIDs returns the subset of ids the user can access, preserving order.
+func (r *MemoryNodesRepository) FilterAccessibleIDs(ctx context.Context, ids []int, userID int) ([]int, error) {
+	if len(ids) == 0 {
+		return []int{}, nil
+	}
+	nodes, err := r.client.MemoryNode.Query().
+		Where(memorynode.IDIn(ids...), accessibleMemoryNode(userID)).
+		Select(memorynode.FieldID).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	allowed := make(map[int]struct{}, len(nodes))
+	for _, n := range nodes {
+		allowed[n.ID] = struct{}{}
+	}
+	out := make([]int, 0, len(nodes))
+	for _, id := range ids {
+		if _, ok := allowed[id]; ok {
+			out = append(out, id)
+		}
+	}
+	return out, nil
 }
 
 // GetOwnedForUser returns a node only if the user owns it.
@@ -74,6 +117,7 @@ func (r *MemoryNodesRepository) GetByIDsForUser(ctx context.Context, ids []int, 
 func (r *MemoryNodesRepository) Create(
 	ctx context.Context,
 	name string,
+	description string,
 	parents, children, cards []int,
 	aliases []string,
 	shared bool,
@@ -93,6 +137,7 @@ func (r *MemoryNodesRepository) Create(
 	}
 	return r.client.MemoryNode.Create().
 		SetName(name).
+		SetDescription(description).
 		SetParents(parents).
 		SetChildren(children).
 		SetCards(cards).
@@ -108,6 +153,9 @@ func (r *MemoryNodesRepository) Update(ctx context.Context, partial models.Memor
 	upd := r.client.MemoryNode.UpdateOneID(partial.ID)
 	if partial.Name != nil {
 		upd = upd.SetName(*partial.Name)
+	}
+	if partial.Description != nil {
+		upd = upd.SetDescription(*partial.Description)
 	}
 	if partial.Children != nil {
 		upd = upd.SetChildren(*partial.Children)

@@ -49,11 +49,187 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/memory-node/{id}/move-to-user": {
+            "post": {
+                "security": [
+                    {
+                        "Login": [
+                            "api"
+                        ]
+                    }
+                ],
+                "description": "Admin-only. Grants a shared memory node and its shared cards to a user. When deep=true, also grants shared descendants recursively.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memory-nodes"
+                ],
+                "summary": "Move shared memory node to user (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Memory node ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Target user and deep flag",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.MoveSharedNodeToUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/memory-node/{id}/remove-from-user": {
+            "post": {
+                "security": [
+                    {
+                        "Login": [
+                            "api"
+                        ]
+                    }
+                ],
+                "description": "Admin-only. Revokes a user's access by deleting memory_node_users / card_users (and card_user_counts) links. Does not delete the node or cards. When deep=true, also revokes shared descendants recursively.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memory-nodes"
+                ],
+                "summary": "Remove shared memory node from user (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Memory node ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Target user and deep flag",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RemoveSharedNodeFromUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/card-item/{id}": {
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns a card item by its ID for the authenticated user",
@@ -121,7 +297,9 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Deletes a card item by ID owned by the authenticated user",
@@ -194,7 +372,9 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns all card items for the authenticated user",
@@ -240,7 +420,9 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns a card with resolved question/answer card items for the authenticated user",
@@ -310,7 +492,9 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns cards for the given JSON ids query parameter owned by the authenticated user",
@@ -374,7 +558,9 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns cards for a memory node (or priority/group), filtered by a simple query string",
@@ -443,7 +629,9 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Decrements the card count by 1 (not below 0)",
@@ -504,10 +692,12 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
-                "description": "Deletes cards by IDs owned by the authenticated user and unlinks them from parent memory nodes",
+                "description": "Deletes owned cards by IDs (including shared cards owned by the user). For shared cards the user only has a grant to, removes the grant/count records instead of deleting the card.",
                 "consumes": [
                     "application/json"
                 ],
@@ -573,7 +763,9 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns multiple card items by their IDs for the authenticated user",
@@ -642,7 +834,9 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns multiple cards by their IDs for the authenticated user",
@@ -711,7 +905,9 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns multiple memory nodes by their IDs for the authenticated user",
@@ -780,7 +976,9 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Increments the card count by 1",
@@ -841,7 +1039,9 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Finds a memory node by one of its aliases for the authenticated user",
@@ -902,10 +1102,12 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
-                "description": "Returns a memory node by its ID for the authenticated user",
+                "description": "Returns a memory node by its ID if the authenticated user owns it or has an explicit shared grant",
                 "produces": [
                     "application/json"
                 ],
@@ -970,10 +1172,12 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
-                "description": "Deletes a memory node by ID owned by the authenticated user",
+                "description": "Deletes a memory node owned by the authenticated user. If the node is shared, also deletes owned child nodes, their cards, and all memory_node_users / card_users (and card_user_counts) links.",
                 "produces": [
                     "application/json"
                 ],
@@ -1039,11 +1243,106 @@ const docTemplate = `{
                 }
             }
         },
+        "/memory-node/{id}/cards": {
+            "post": {
+                "security": [
+                    {
+                        "Login": [
+                            "api"
+                        ]
+                    }
+                ],
+                "description": "Creates multiple text-only cards under a memory node. Body may be a cards array or an object with cards. Each card requires questionTextItems and answerTextItems. Pass ?shared=true to mark all cards as shared.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Bulk create text cards",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Memory node ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Mark all cards as shared",
+                        "name": "shared",
+                        "in": "query"
+                    },
+                    {
+                        "description": "Cards array or wrapper",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BulkTextCardsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.CardFull"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/memory-node/{id}/parents-path": {
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns the first-parent chain from root to the given node (inclusive)",
@@ -1112,11 +1411,100 @@ const docTemplate = `{
                 }
             }
         },
+        "/memory-node/{id}/users": {
+            "post": {
+                "security": [
+                    {
+                        "Login": [
+                            "api"
+                        ]
+                    }
+                ],
+                "description": "Creates a memory_node_users row (and card_users for shared cards on the node) so the user can see the shared node. Does not make the node visible to everyone.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memory-nodes"
+                ],
+                "summary": "Grant shared memory node access",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Memory node ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "User to grant",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.GrantMemoryNodeAccessRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/memory-nodes": {
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns all memory nodes for the authenticated user, or a subset when ids query is provided as a JSON array",
@@ -1179,10 +1567,12 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
-                "description": "Returns memory nodes with no parents for the authenticated user (including shared roots)",
+                "description": "Returns memory nodes with no parents for the authenticated user (owned or explicitly granted shared roots)",
                 "produces": [
                     "application/json"
                 ],
@@ -1225,7 +1615,9 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Creates card items and a card under a memory node for the authenticated user",
@@ -1291,7 +1683,9 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Creates a new card item owned by the authenticated user",
@@ -1348,7 +1742,9 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Creates a new memory node owned by the authenticated user",
@@ -1414,7 +1810,9 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Partially updates an existing card owned by the authenticated user",
@@ -1489,7 +1887,9 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Partially updates an existing card item owned by the authenticated user",
@@ -1564,7 +1964,9 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Bulk-updates count on multiple cards owned by the authenticated user",
@@ -1624,7 +2026,9 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Partially updates an existing memory node owned by the authenticated user",
@@ -1763,7 +2167,7 @@ const docTemplate = `{
                         ]
                     }
                 ],
-                "description": "Logs in a user and returns tokens. Sets auth cookies. Copy accessToken into Authorize for other endpoints.",
+                "description": "Logs in a user and returns tokens. Sets auth cookies.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1862,7 +2266,9 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns the authenticated user",
@@ -1962,11 +2368,96 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/token": {
+            "post": {
+                "security": [
+                    {
+                        "": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "OAuth2 password grant. Use email as username. Used by Swagger Authorize.",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Issue OAuth2 access token",
+                "parameters": [
+                    {
+                        "enum": [
+                            "password"
+                        ],
+                        "type": "string",
+                        "description": "Must be password",
+                        "name": "grant_type",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User email",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User password",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.OAuthTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "get": {
                 "security": [
                     {
-                        "AccessTokenCookie": []
+                        "Login": [
+                            "api"
+                        ]
                     }
                 ],
                 "description": "Returns a user by their ID",
@@ -2038,6 +2529,21 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "type": "integer"
+                    }
+                }
+            }
+        },
+        "models.BulkTextCardsRequest": {
+            "type": "object",
+            "required": [
+                "cards"
+            ],
+            "properties": {
+                "cards": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/models.TextCardInput"
                     }
                 }
             }
@@ -2302,6 +2808,17 @@ const docTemplate = `{
                 }
             }
         },
+        "models.GrantMemoryNodeAccessRequest": {
+            "type": "object",
+            "required": [
+                "userId"
+            ],
+            "properties": {
+                "userId": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.LoginUserRequest": {
             "type": "object",
             "required": [
@@ -2353,6 +2870,9 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "description": {
+                    "type": "string"
                 },
                 "groups": {
                     "type": "array",
@@ -2409,6 +2929,9 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "description": {
+                    "type": "string"
                 },
                 "groups": {
                     "type": "array",
@@ -2477,6 +3000,9 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
+                "description": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2487,6 +3013,20 @@ const docTemplate = `{
                     }
                 },
                 "shared": {
+                    "type": "boolean"
+                },
+                "userId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.MoveSharedNodeToUserRequest": {
+            "type": "object",
+            "required": [
+                "userId"
+            ],
+            "properties": {
+                "deep": {
                     "type": "boolean"
                 },
                 "userId": {
@@ -2555,11 +3095,69 @@ const docTemplate = `{
                 }
             }
         },
+        "models.OAuthTokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "expires_in": {
+                    "type": "integer",
+                    "example": 900
+                },
+                "refresh_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "token_type": {
+                    "type": "string",
+                    "example": "bearer"
+                }
+            }
+        },
         "models.RefreshTokenRequest": {
             "type": "object",
             "properties": {
                 "refreshToken": {
                     "type": "string"
+                }
+            }
+        },
+        "models.RemoveSharedNodeFromUserRequest": {
+            "type": "object",
+            "required": [
+                "userId"
+            ],
+            "properties": {
+                "deep": {
+                    "type": "boolean"
+                },
+                "userId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.TextCardInput": {
+            "type": "object",
+            "required": [
+                "answerTextItems",
+                "questionTextItems"
+            ],
+            "properties": {
+                "answerTextItems": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "questionTextItems": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -2607,7 +3205,8 @@ const docTemplate = `{
                 "CODE",
                 "FORMULA",
                 "IMAGE",
-                "WORD_WITH_STRESS"
+                "WORD_WITH_STRESS",
+                "MARKDOWN"
             ],
             "x-enum-varnames": [
                 "CardItemTypeText",
@@ -2615,7 +3214,8 @@ const docTemplate = `{
                 "CardItemTypeCode",
                 "CardItemTypeFormula",
                 "CardItemTypeImage",
-                "CardItemTypeWordWithStress"
+                "CardItemTypeWordWithStress",
+                "CardItemTypeMarkdown"
             ]
         },
         "schema.CardsGroup": {
@@ -2677,15 +3277,20 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "AccessTokenCookie": {
-            "type": "apiKey",
-            "name": "access_token",
-            "in": "cookie"
+        "Login": {
+            "type": "oauth2",
+            "flow": "password",
+            "tokenUrl": "/users/token",
+            "scopes": {
+                "api": "Access the MemoryGuard API"
+            }
         }
     },
     "security": [
         {
-            "AccessTokenCookie": []
+            "Login": [
+                "api"
+            ]
         }
     ]
 }`
@@ -2697,7 +3302,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{"http", "https"},
 	Title:            "MemoryGuard API",
-	Description:      "Memory nodes, cards, and card items API server.\n**Authentication:** Use `POST /users/login`, copy `accessToken` from the response, then click **Authorize** and paste it as the `access_token` cookie value. Alternatively, login from Swagger on the same host and cookies are sent automatically.",
+	Description:      "Memory nodes, cards, and card items API server.\n**Authentication:** Click **Authorize**, enter your email as username and your password, then Authorize. Swagger will call `POST /users/token` and attach the access token as a Bearer header.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

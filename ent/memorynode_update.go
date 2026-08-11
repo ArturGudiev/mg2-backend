@@ -45,6 +45,26 @@ func (_u *MemoryNodeUpdate) SetNillableName(v *string) *MemoryNodeUpdate {
 	return _u
 }
 
+// SetDescription sets the "description" field.
+func (_u *MemoryNodeUpdate) SetDescription(v string) *MemoryNodeUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *MemoryNodeUpdate) SetNillableDescription(v *string) *MemoryNodeUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (_u *MemoryNodeUpdate) ClearDescription() *MemoryNodeUpdate {
+	_u.mutation.ClearDescription()
+	return _u
+}
+
 // SetChildren sets the "children" field.
 func (_u *MemoryNodeUpdate) SetChildren(v []int) *MemoryNodeUpdate {
 	_u.mutation.SetChildren(v)
@@ -269,6 +289,12 @@ func (_u *MemoryNodeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(memorynode.FieldName, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(memorynode.FieldDescription, field.TypeString, value)
+	}
+	if _u.mutation.DescriptionCleared() {
+		_spec.ClearField(memorynode.FieldDescription, field.TypeString)
+	}
 	if value, ok := _u.mutation.Children(); ok {
 		_spec.SetField(memorynode.FieldChildren, field.TypeJSON, value)
 	}
@@ -431,6 +457,26 @@ func (_u *MemoryNodeUpdateOne) SetNillableName(v *string) *MemoryNodeUpdateOne {
 	if v != nil {
 		_u.SetName(*v)
 	}
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *MemoryNodeUpdateOne) SetDescription(v string) *MemoryNodeUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *MemoryNodeUpdateOne) SetNillableDescription(v *string) *MemoryNodeUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (_u *MemoryNodeUpdateOne) ClearDescription() *MemoryNodeUpdateOne {
+	_u.mutation.ClearDescription()
 	return _u
 }
 
@@ -687,6 +733,12 @@ func (_u *MemoryNodeUpdateOne) sqlSave(ctx context.Context) (_node *MemoryNode, 
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(memorynode.FieldName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(memorynode.FieldDescription, field.TypeString, value)
+	}
+	if _u.mutation.DescriptionCleared() {
+		_spec.ClearField(memorynode.FieldDescription, field.TypeString)
 	}
 	if value, ok := _u.mutation.Children(); ok {
 		_spec.SetField(memorynode.FieldChildren, field.TypeJSON, value)

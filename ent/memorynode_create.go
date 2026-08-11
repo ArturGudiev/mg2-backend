@@ -28,6 +28,20 @@ func (_c *MemoryNodeCreate) SetName(v string) *MemoryNodeCreate {
 	return _c
 }
 
+// SetDescription sets the "description" field.
+func (_c *MemoryNodeCreate) SetDescription(v string) *MemoryNodeCreate {
+	_c.mutation.SetDescription(v)
+	return _c
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_c *MemoryNodeCreate) SetNillableDescription(v *string) *MemoryNodeCreate {
+	if v != nil {
+		_c.SetDescription(*v)
+	}
+	return _c
+}
+
 // SetChildren sets the "children" field.
 func (_c *MemoryNodeCreate) SetChildren(v []int) *MemoryNodeCreate {
 	_c.mutation.SetChildren(v)
@@ -145,6 +159,10 @@ func (_c *MemoryNodeCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *MemoryNodeCreate) defaults() {
+	if _, ok := _c.mutation.Description(); !ok {
+		v := memorynode.DefaultDescription
+		_c.mutation.SetDescription(v)
+	}
 	if _, ok := _c.mutation.Children(); !ok {
 		v := memorynode.DefaultChildren
 		_c.mutation.SetChildren(v)
@@ -243,6 +261,10 @@ func (_c *MemoryNodeCreate) createSpec() (*MemoryNode, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(memorynode.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if value, ok := _c.mutation.Description(); ok {
+		_spec.SetField(memorynode.FieldDescription, field.TypeString, value)
+		_node.Description = value
 	}
 	if value, ok := _c.mutation.Children(); ok {
 		_spec.SetField(memorynode.FieldChildren, field.TypeJSON, value)

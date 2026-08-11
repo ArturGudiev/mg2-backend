@@ -113,28 +113,32 @@ func init() {
 	memorynodeDescName := memorynodeFields[1].Descriptor()
 	// memorynode.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	memorynode.NameValidator = memorynodeDescName.Validators[0].(func(string) error)
+	// memorynodeDescDescription is the schema descriptor for description field.
+	memorynodeDescDescription := memorynodeFields[2].Descriptor()
+	// memorynode.DefaultDescription holds the default value on creation for the description field.
+	memorynode.DefaultDescription = memorynodeDescDescription.Default.(string)
 	// memorynodeDescChildren is the schema descriptor for children field.
-	memorynodeDescChildren := memorynodeFields[2].Descriptor()
+	memorynodeDescChildren := memorynodeFields[3].Descriptor()
 	// memorynode.DefaultChildren holds the default value on creation for the children field.
 	memorynode.DefaultChildren = memorynodeDescChildren.Default.([]int)
 	// memorynodeDescParents is the schema descriptor for parents field.
-	memorynodeDescParents := memorynodeFields[3].Descriptor()
+	memorynodeDescParents := memorynodeFields[4].Descriptor()
 	// memorynode.DefaultParents holds the default value on creation for the parents field.
 	memorynode.DefaultParents = memorynodeDescParents.Default.([]int)
 	// memorynodeDescCards is the schema descriptor for cards field.
-	memorynodeDescCards := memorynodeFields[4].Descriptor()
+	memorynodeDescCards := memorynodeFields[5].Descriptor()
 	// memorynode.DefaultCards holds the default value on creation for the cards field.
 	memorynode.DefaultCards = memorynodeDescCards.Default.([]int)
 	// memorynodeDescAliases is the schema descriptor for aliases field.
-	memorynodeDescAliases := memorynodeFields[5].Descriptor()
+	memorynodeDescAliases := memorynodeFields[6].Descriptor()
 	// memorynode.DefaultAliases holds the default value on creation for the aliases field.
 	memorynode.DefaultAliases = memorynodeDescAliases.Default.([]string)
 	// memorynodeDescShared is the schema descriptor for shared field.
-	memorynodeDescShared := memorynodeFields[8].Descriptor()
+	memorynodeDescShared := memorynodeFields[9].Descriptor()
 	// memorynode.DefaultShared holds the default value on creation for the shared field.
 	memorynode.DefaultShared = memorynodeDescShared.Default.(bool)
 	// memorynodeDescUserID is the schema descriptor for user_id field.
-	memorynodeDescUserID := memorynodeFields[9].Descriptor()
+	memorynodeDescUserID := memorynodeFields[10].Descriptor()
 	// memorynode.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
 	memorynode.UserIDValidator = memorynodeDescUserID.Validators[0].(func(int) error)
 	// memorynodeDescID is the schema descriptor for id field.
@@ -175,10 +179,10 @@ func init() {
 	userDescEmail := userFields[2].Descriptor()
 	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
-	// userDescPassword is the schema descriptor for password field.
-	userDescPassword := userFields[3].Descriptor()
-	// user.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
-	user.PasswordValidator = userDescPassword.Validators[0].(func(string) error)
+	// userDescPasswordHash is the schema descriptor for password_hash field.
+	userDescPasswordHash := userFields[3].Descriptor()
+	// user.PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
+	user.PasswordHashValidator = userDescPasswordHash.Validators[0].(func(string) error)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userFields[0].Descriptor()
 	// user.IDValidator is a validator for the "id" field. It is called by the builders before save.

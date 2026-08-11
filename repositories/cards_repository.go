@@ -3,6 +3,7 @@ package repositories
 import (
 	"arturgudiev/memoryguard/ent"
 	"arturgudiev/memoryguard/ent/card"
+	"arturgudiev/memoryguard/ent/carduser"
 	"arturgudiev/memoryguard/ent/predicate"
 	"arturgudiev/memoryguard/ent/schema"
 	"arturgudiev/memoryguard/models"
@@ -17,15 +18,22 @@ func NewCardsRepository(client *ent.Client) *CardsRepository {
 	return &CardsRepository{client: client}
 }
 
+// accessibleCard: owner, or shared card with an explicit card_users row.
 func accessibleCard(userID int) predicate.Card {
-	return card.Or(card.UserIDEQ(userID), card.SharedEQ(true))
+	return card.Or(
+		card.UserIDEQ(userID),
+		card.And(
+			card.SharedEQ(true),
+			card.HasCardUsersWith(carduser.UserIDEQ(userID)),
+		),
+	)
 }
 
 func (r *CardsRepository) Get(ctx context.Context, id int) (*ent.Card, error) {
 	return r.client.Card.Get(ctx, id)
 }
 
-// GetForUser returns a card the user owns or that is shared.
+// GetForUser returns a card the user owns or a shared card they were granted.
 func (r *CardsRepository) GetForUser(ctx context.Context, id, userID int) (*ent.Card, error) {
 	return r.client.Card.Query().
 		Where(card.IDEQ(id), accessibleCard(userID)).
@@ -60,6 +68,31 @@ func (r *CardsRepository) GetByIDsForUser(ctx context.Context, ids []int, userID
 		}
 	}
 	return ordered, nil
+}
+
+// FilterAccessibleIDs returns the subset of ids the user can access, preserving order.
+func (r *CardsRepository) FilterAccessibleIDs(ctx context.Context, ids []int, userID int) ([]int, error) {
+	if len(ids) == 0 {
+		return []int{}, nil
+	}
+	cards, err := r.client.Card.Query().
+		Where(card.IDIn(ids...), accessibleCard(userID)).
+		Select(card.FieldID).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	allowed := make(map[int]struct{}, len(cards))
+	for _, c := range cards {
+		allowed[c.ID] = struct{}{}
+	}
+	out := make([]int, 0, len(cards))
+	for _, id := range ids {
+		if _, ok := allowed[id]; ok {
+			out = append(out, id)
+		}
+	}
+	return out, nil
 }
 
 func (r *CardsRepository) Create(

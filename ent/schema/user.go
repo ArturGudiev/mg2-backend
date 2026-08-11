@@ -61,7 +61,7 @@ func (User) Fields() []ent.Field {
 		field.String("email").
 			NotEmpty().
 			Unique(),
-		field.String("password").
+		field.String("password_hash").
 			NotEmpty().
 			Sensitive(),
 		field.Enum("role").

@@ -9,7 +9,7 @@ import (
 	"entgo.io/ent/schema/index"
 )
 
-// MemoryNodeUser links a user to a shared memory node they use.
+// MemoryNodeUser links a user to a shared memory node they are allowed to use.
 type MemoryNodeUser struct {
 	ent.Schema
 }

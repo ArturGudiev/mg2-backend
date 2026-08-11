@@ -35,6 +35,9 @@ func (MemoryNode) Fields() []ent.Field {
 			Immutable(),
 		field.String("name").
 			NotEmpty(),
+		field.String("description").
+			Default("").
+			Optional(),
 		field.Ints("children").
 			Default([]int{}),
 		field.Ints("parents").

@@ -203,6 +203,12 @@ func (s *CardsService) Create(ctx context.Context, short models.CardShort, userI
 		_ = s.memoryNodesSvc.AddCardID(ctx, nodeID, created.ID)
 	}
 
+	if shared {
+		for _, nodeID := range parentNodes {
+			_ = s.grantCardToNodeMembers(ctx, created.ID, nodeID)
+		}
+	}
+
 	return s.Get(ctx, created.ID, userID)
 }
 
@@ -213,6 +219,65 @@ func (s *CardsService) CreateUnderNode(ctx context.Context, req models.NewCardRe
 		MemoryNodeID:  &req.MemoryNodeID,
 		Shared:        req.Shared,
 	}, userID)
+}
+
+func textCardItem(text string) models.CardItemShort {
+	trimmed := strings.TrimSpace(text)
+	return models.CardItemShort{
+		Type: schema.CardItemTypeText,
+		Text: &trimmed,
+	}
+}
+
+func (s *CardsService) CreateManyTextUnderNode(
+	ctx context.Context,
+	nodeID int,
+	cards []models.TextCardInput,
+	shared bool,
+	userID int,
+) ([]*models.CardFull, error) {
+	if len(cards) == 0 {
+		return nil, fmt.Errorf("cards array must not be empty")
+	}
+	if _, err := s.memoryNodesSvc.Get(ctx, nodeID, userID); err != nil {
+		return nil, err
+	}
+
+	sharedVal := shared
+	result := make([]*models.CardFull, 0, len(cards))
+	for i, card := range cards {
+		questionItems := textCardItems(card.QuestionTextItems)
+		answerItems := textCardItems(card.AnswerTextItems)
+		if len(questionItems) == 0 || len(answerItems) == 0 {
+			return nil, fmt.Errorf("card %d: questionTextItems and answerTextItems must each have at least one non-empty value", i+1)
+		}
+		created, err := s.Create(ctx, models.CardShort{
+			QuestionItems: questionItems,
+			AnswerItems:   answerItems,
+			MemoryNodeID:  &nodeID,
+			Shared:        &sharedVal,
+		}, userID)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, created)
+	}
+	return result, nil
+}
+
+func textCardItems(texts []string) []models.CardItemShort {
+	if len(texts) == 0 {
+		return nil
+	}
+	items := make([]models.CardItemShort, 0, len(texts))
+	for _, text := range texts {
+		trimmed := strings.TrimSpace(text)
+		if trimmed == "" {
+			continue
+		}
+		items = append(items, textCardItem(trimmed))
+	}
+	return items
 }
 
 func (s *CardsService) Update(ctx context.Context, partial models.CardPartial, userID int) (*models.CardFull, error) {
@@ -252,15 +317,34 @@ func (s *CardsService) Update(ctx context.Context, partial models.CardPartial, u
 }
 
 func (s *CardsService) Delete(ctx context.Context, id, userID int) error {
-	c, err := s.cardsRepo.GetOwnedForUser(ctx, id, userID)
+	c, err := s.cardsRepo.GetForUser(ctx, id, userID)
 	if err != nil {
 		return err
 	}
+
+	// Shared card for a grantee: drop access link only, keep the card itself.
+	if c.Shared && c.UserID != userID {
+		return s.revokeCardAccessFromUser(ctx, id, userID)
+	}
+
+	if c.UserID != userID {
+		return fmt.Errorf("forbidden")
+	}
+
+	// Own card (shared or not): fully delete, including grant/count rows.
 	for _, nodeID := range c.ParentNodes {
 		_ = s.memoryNodesSvc.RemoveCardID(ctx, nodeID, id)
 	}
+	if err := s.cardUsersRepo.DeleteByCardID(ctx, id); err != nil {
+		return err
+	}
+	if err := s.cardUserCountsRepo.DeleteByCardID(ctx, id); err != nil {
+		return err
+	}
 	itemIDs := append(append([]int{}, c.Question...), c.Answer...)
-	_ = s.cardItemsSvc.DeleteByIDs(ctx, itemIDs)
+	if err := s.cardItemsSvc.DeleteByIDs(ctx, itemIDs); err != nil {
+		return err
+	}
 	return s.cardsRepo.Delete(ctx, id)
 }
 
@@ -278,6 +362,184 @@ func (s *CardsService) touchSharedCard(ctx context.Context, card *ent.Card, user
 		return nil
 	}
 	return s.cardUsersRepo.EnsureLink(ctx, card.ID, userID)
+}
+
+func (s *CardsService) grantCardToNodeMembers(ctx context.Context, cardID, nodeID int) error {
+	userIDs, err := s.memoryNodesSvc.ListGrantedUserIDs(ctx, nodeID)
+	if err != nil {
+		return err
+	}
+	for _, uid := range userIDs {
+		if err := s.grantCardAccessToUser(ctx, cardID, uid); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// grantCardAccessToUser makes a card accessible to a grantee: marks card/items shared if needed,
+// then creates a card_users link.
+func (s *CardsService) grantCardAccessToUser(ctx context.Context, cardID, granteeUserID int) error {
+	card, err := s.cardsRepo.Get(ctx, cardID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+	if !card.Shared {
+		shared := true
+		if _, err := s.cardsRepo.Update(ctx, models.CardPartial{ID: cardID, Shared: &shared}); err != nil {
+			return err
+		}
+	}
+	itemIDs := make([]int, 0, len(card.Question)+len(card.Answer))
+	itemIDs = append(itemIDs, card.Question...)
+	itemIDs = append(itemIDs, card.Answer...)
+	if err := s.cardItemsSvc.EnsureShared(ctx, itemIDs); err != nil {
+		return err
+	}
+	return s.cardUsersRepo.EnsureLink(ctx, cardID, granteeUserID)
+}
+
+// GrantSharedNodeAccess grants a user access to a shared memory node and its cards.
+func (s *CardsService) GrantSharedNodeAccess(ctx context.Context, nodeID, granteeUserID, actorUserID int) error {
+	if err := s.memoryNodesSvc.GrantAccess(ctx, nodeID, granteeUserID, actorUserID); err != nil {
+		return err
+	}
+	node, err := s.memoryNodesSvc.Get(ctx, nodeID, actorUserID)
+	if err != nil {
+		return err
+	}
+	for _, cardID := range node.Cards {
+		if err := s.grantCardAccessToUser(ctx, cardID, granteeUserID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// MoveSharedNodeToUser grants a shared memory node and its cards to a user.
+// If deep is true, the same grant is applied to shared children recursively.
+// The root node must be shared; non-shared descendants are skipped.
+func (s *CardsService) MoveSharedNodeToUser(ctx context.Context, nodeID, granteeUserID int, deep bool) error {
+	if granteeUserID <= 0 {
+		return fmt.Errorf("user id is required")
+	}
+	return s.moveSharedNodeToUser(ctx, nodeID, granteeUserID, deep, true, map[int]struct{}{})
+}
+
+func (s *CardsService) moveSharedNodeToUser(
+	ctx context.Context,
+	nodeID, granteeUserID int,
+	deep, required bool,
+	seen map[int]struct{},
+) error {
+	if nodeID <= 0 {
+		return nil
+	}
+	if _, ok := seen[nodeID]; ok {
+		return nil
+	}
+	seen[nodeID] = struct{}{}
+
+	node, err := s.memoryNodesSvc.GetByID(ctx, nodeID)
+	if err != nil {
+		if !required && ent.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+	if !node.Shared {
+		if required {
+			return fmt.Errorf("memory node must be shared")
+		}
+		return nil
+	}
+
+	if err := s.memoryNodesSvc.EnsureUserLink(ctx, nodeID, granteeUserID); err != nil {
+		return err
+	}
+	for _, cardID := range node.Cards {
+		if err := s.grantCardAccessToUser(ctx, cardID, granteeUserID); err != nil {
+			return err
+		}
+	}
+
+	if !deep {
+		return nil
+	}
+	for _, childID := range node.Children {
+		if err := s.moveSharedNodeToUser(ctx, childID, granteeUserID, true, false, seen); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// RemoveSharedNodeFromUser revokes a user's access to a shared memory node and its cards
+// by deleting grant links only (does not delete the node or cards).
+// If deep is true, the same revoke is applied to shared children recursively.
+func (s *CardsService) RemoveSharedNodeFromUser(ctx context.Context, nodeID, userID int, deep bool) error {
+	if userID <= 0 {
+		return fmt.Errorf("user id is required")
+	}
+	return s.removeSharedNodeFromUser(ctx, nodeID, userID, deep, true, map[int]struct{}{})
+}
+
+func (s *CardsService) removeSharedNodeFromUser(
+	ctx context.Context,
+	nodeID, userID int,
+	deep, required bool,
+	seen map[int]struct{},
+) error {
+	if nodeID <= 0 {
+		return nil
+	}
+	if _, ok := seen[nodeID]; ok {
+		return nil
+	}
+	seen[nodeID] = struct{}{}
+
+	node, err := s.memoryNodesSvc.GetByID(ctx, nodeID)
+	if err != nil {
+		if !required && ent.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+	if !node.Shared {
+		if required {
+			return fmt.Errorf("memory node must be shared")
+		}
+		return nil
+	}
+
+	if err := s.memoryNodesSvc.RemoveUserLink(ctx, nodeID, userID); err != nil {
+		return err
+	}
+	for _, cardID := range node.Cards {
+		if err := s.revokeCardAccessFromUser(ctx, cardID, userID); err != nil {
+			return err
+		}
+	}
+
+	if !deep {
+		return nil
+	}
+	for _, childID := range node.Children {
+		if err := s.removeSharedNodeFromUser(ctx, childID, userID, true, false, seen); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *CardsService) revokeCardAccessFromUser(ctx context.Context, cardID, userID int) error {
+	if err := s.cardUsersRepo.DeleteLink(ctx, cardID, userID); err != nil {
+		return err
+	}
+	return s.cardUserCountsRepo.DeleteByCardAndUser(ctx, cardID, userID)
 }
 
 func (s *CardsService) UpdateField(ctx context.Context, req models.UpdateCardsFieldRequest, userID int) error {

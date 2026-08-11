@@ -95,6 +95,22 @@ func (r *CardUserCountsRepository) Decrement(ctx context.Context, cardID, userID
 		Save(ctx)
 }
 
+// DeleteByCardID removes all per-user count rows for a card.
+func (r *CardUserCountsRepository) DeleteByCardID(ctx context.Context, cardID int) error {
+	_, err := r.client.CardUserCount.Delete().
+		Where(cardusercount.CardIDEQ(cardID)).
+		Exec(ctx)
+	return err
+}
+
+// DeleteByCardAndUser removes the per-user count row for one card/user (no-op if missing).
+func (r *CardUserCountsRepository) DeleteByCardAndUser(ctx context.Context, cardID, userID int) error {
+	_, err := r.client.CardUserCount.Delete().
+		Where(cardusercount.CardIDEQ(cardID), cardusercount.UserIDEQ(userID)).
+		Exec(ctx)
+	return err
+}
+
 type CardUsersRepository struct {
 	client *ent.Client
 }
@@ -126,5 +142,21 @@ func (r *CardUsersRepository) EnsureLink(ctx context.Context, cardID, userID int
 			return nil
 		}
 	}
+	return err
+}
+
+// DeleteByCardID removes all grant rows for a card.
+func (r *CardUsersRepository) DeleteByCardID(ctx context.Context, cardID int) error {
+	_, err := r.client.CardUser.Delete().
+		Where(carduser.CardIDEQ(cardID)).
+		Exec(ctx)
+	return err
+}
+
+// DeleteLink removes the grant row for one user on a card (no-op if missing).
+func (r *CardUsersRepository) DeleteLink(ctx context.Context, cardID, userID int) error {
+	_, err := r.client.CardUser.Delete().
+		Where(carduser.CardIDEQ(cardID), carduser.UserIDEQ(userID)).
+		Exec(ctx)
 	return err
 }
