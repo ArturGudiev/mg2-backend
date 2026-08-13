@@ -17,6 +17,8 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldLogin holds the string denoting the login field in the database.
+	FieldLogin = "login"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
 	// FieldPasswordHash holds the string denoting the password_hash field in the database.
@@ -94,6 +96,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldName,
+	FieldLogin,
 	FieldEmail,
 	FieldPasswordHash,
 	FieldRole,
@@ -112,6 +115,8 @@ func ValidColumn(column string) bool {
 var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// LoginValidator is a validator for the "login" field. It is called by the builders before save.
+	LoginValidator func(string) error
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
 	// PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
@@ -143,6 +148,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByLogin orders the results by the login field.
+func ByLogin(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLogin, opts...).ToFunc()
 }
 
 // ByEmail orders the results by the email field.

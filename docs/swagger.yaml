@@ -200,13 +200,17 @@ definitions:
   models.LoginUserRequest:
     properties:
       email:
+        description: Email is accepted as an alias for login (backward compatible).
         example: john.doe@example.com
+        type: string
+      login:
+        description: Login accepts either the user's login or email.
+        example: johndoe
         type: string
       password:
         example: password
         type: string
     required:
-    - email
     - password
     type: object
   models.LoginUserResponse:
@@ -370,6 +374,9 @@ definitions:
       email:
         example: john.doe@example.com
         type: string
+      login:
+        example: johndoe
+        type: string
       name:
         example: John Doe
         type: string
@@ -378,6 +385,7 @@ definitions:
         type: string
     required:
     - email
+    - login
     - name
     - password
     type: object
@@ -445,6 +453,8 @@ definitions:
         type: string
       id:
         type: integer
+      login:
+        type: string
       name:
         type: string
       role:
@@ -516,7 +526,7 @@ info:
     url: http://www.swagger.io/support
   description: |-
     Memory nodes, cards, and card items API server.
-    **Authentication:** Click **Authorize**, enter your email as username and your password, then Authorize. Swagger will call `POST /users/token` and attach the access token as a Bearer header.
+    **Authentication:** Click **Authorize**, enter your login or email as username and your password, then Authorize. Swagger will call `POST /users/token` and attach the access token as a Bearer header.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -1952,7 +1962,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Logs in a user and returns tokens. Sets auth cookies.
+      description: Logs in a user by login or email and returns tokens. Sets auth
+        cookies.
       parameters:
       - description: User to login
         in: body
@@ -2083,7 +2094,8 @@ paths:
     post:
       consumes:
       - application/x-www-form-urlencoded
-      description: OAuth2 password grant. Use email as username. Used by Swagger Authorize.
+      description: OAuth2 password grant. Use login or email as username. Used by
+        Swagger Authorize.
       parameters:
       - description: Must be password
         enum:
@@ -2092,7 +2104,7 @@ paths:
         name: grant_type
         required: true
         type: string
-      - description: User email
+      - description: User login or email
         in: formData
         name: username
         required: true

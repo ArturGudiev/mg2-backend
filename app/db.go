@@ -58,6 +58,9 @@ func provideEntClient() (*ent.Client, error) {
 	if err := migratePlainPasswordsToHash(ctx, dbURL); err != nil {
 		return nil, fmt.Errorf("password hash migration: %w", err)
 	}
+	if err := migrateUserLogins(ctx, dbURL); err != nil {
+		return nil, fmt.Errorf("user login migration: %w", err)
+	}
 
 	client, err := ent.Open("postgres", dbURL)
 	if err != nil {
@@ -199,6 +202,122 @@ func migratePlainPasswordsToHash(ctx context.Context, dbURL string) error {
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+// migrateUserLogins adds users.login and backfills unique values from email
+// before Ent applies NOT NULL + UNIQUE on the new column.
+func migrateUserLogins(ctx context.Context, dbURL string) error {
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	var usersExists bool
+	if err := db.QueryRowContext(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM information_schema.tables
+			WHERE table_schema = 'public' AND table_name = 'users'
+		)`).Scan(&usersExists); err != nil {
+		return err
+	}
+	if !usersExists {
+		return nil
+	}
+
+	var hasLogin bool
+	if err := db.QueryRowContext(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM information_schema.columns
+			WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'login'
+		)`).Scan(&hasLogin); err != nil {
+		return err
+	}
+
+	if !hasLogin {
+		if _, err := db.ExecContext(ctx, `ALTER TABLE users ADD COLUMN login VARCHAR`); err != nil {
+			return err
+		}
+	}
+
+	rows, err := db.QueryContext(ctx, `
+		SELECT id, email FROM users
+		WHERE login IS NULL OR login = ''`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	type row struct {
+		id    int
+		email string
+	}
+	var toFill []row
+	for rows.Next() {
+		var r row
+		if err := rows.Scan(&r.id, &r.email); err != nil {
+			return err
+		}
+		toFill = append(toFill, r)
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	_ = rows.Close()
+
+	used := map[string]bool{}
+	existing, err := db.QueryContext(ctx, `
+		SELECT lower(login) FROM users
+		WHERE login IS NOT NULL AND login <> ''`)
+	if err != nil {
+		return err
+	}
+	defer existing.Close()
+	for existing.Next() {
+		var login string
+		if err := existing.Scan(&login); err != nil {
+			return err
+		}
+		used[login] = true
+	}
+	if err := existing.Err(); err != nil {
+		return err
+	}
+	_ = existing.Close()
+
+	for _, r := range toFill {
+		base := strings.ToLower(strings.TrimSpace(r.email))
+		if at := strings.IndexByte(base, '@'); at > 0 {
+			base = base[:at]
+		}
+		if base == "" {
+			base = fmt.Sprintf("user%d", r.id)
+		}
+		candidate := base
+		for n := 1; used[candidate]; n++ {
+			candidate = fmt.Sprintf("%s%d", base, n)
+		}
+		used[candidate] = true
+		if _, err := db.ExecContext(ctx, `UPDATE users SET login = $1 WHERE id = $2`, candidate, r.id); err != nil {
+			return err
+		}
+	}
+	if len(toFill) > 0 {
+		log.Printf("Migrated login for %d user(s)", len(toFill))
+	}
+
+	if _, err := db.ExecContext(ctx, `ALTER TABLE users ALTER COLUMN login SET NOT NULL`); err != nil {
+		if !strings.Contains(strings.ToLower(err.Error()), "already") {
+			return err
+		}
+	}
+
+	if _, err := db.ExecContext(ctx, `
+		CREATE UNIQUE INDEX IF NOT EXISTS users_login_key ON users (login)`); err != nil {
+		return err
 	}
 
 	return nil

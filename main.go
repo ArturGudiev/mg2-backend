@@ -19,7 +19,7 @@ import (
 // @title           MemoryGuard API
 // @version         1.0
 // @description     Memory nodes, cards, and card items API server.
-// @description     **Authentication:** Click **Authorize**, enter your email as username and your password, then Authorize. Swagger will call `POST /users/token` and attach the access token as a Bearer header.
+// @description     **Authentication:** Click **Authorize**, enter your login or email as username and your password, then Authorize. Swagger will call `POST /users/token` and attach the access token as a Bearer header.
 
 // @contact.name   API Support
 // @contact.url    http://www.swagger.io/support

@@ -3,8 +3,19 @@ package models
 import "arturgudiev/memoryguard/ent/schema"
 
 type LoginUserRequest struct {
-	Email    string `json:"email" binding:"required" example:"john.doe@example.com"`
+	// Login accepts either the user's login or email.
+	Login string `json:"login" example:"johndoe"`
+	// Email is accepted as an alias for login (backward compatible).
+	Email    string `json:"email" example:"john.doe@example.com"`
 	Password string `json:"password" binding:"required" example:"password"`
+}
+
+// Identifier returns login or email (whichever was provided).
+func (r LoginUserRequest) Identifier() string {
+	if r.Login != "" {
+		return r.Login
+	}
+	return r.Email
 }
 
 type LoginUserResponse struct {
@@ -28,12 +39,14 @@ type RefreshTokenRequest struct {
 type UserResponse struct {
 	ID    int             `json:"id"`
 	Name  string          `json:"name"`
+	Login string          `json:"login"`
 	Email string          `json:"email"`
 	Role  schema.UserRole `json:"role"`
 }
 
 type NewUserRequest struct {
 	Name     string `json:"name" binding:"required" example:"John Doe"`
+	Login    string `json:"login" binding:"required" example:"johndoe"`
 	Email    string `json:"email" binding:"required" example:"john.doe@example.com"`
 	Password string `json:"password" binding:"required" example:"password"`
 }

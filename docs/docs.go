@@ -2167,7 +2167,7 @@ const docTemplate = `{
                         ]
                     }
                 ],
-                "description": "Logs in a user and returns tokens. Sets auth cookies.",
+                "description": "Logs in a user by login or email and returns tokens. Sets auth cookies.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2377,7 +2377,7 @@ const docTemplate = `{
                         ]
                     }
                 ],
-                "description": "OAuth2 password grant. Use email as username. Used by Swagger Authorize.",
+                "description": "OAuth2 password grant. Use login or email as username. Used by Swagger Authorize.",
                 "consumes": [
                     "application/x-www-form-urlencoded"
                 ],
@@ -2401,7 +2401,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "User email",
+                        "description": "User login or email",
                         "name": "username",
                         "in": "formData",
                         "required": true
@@ -2822,13 +2822,18 @@ const docTemplate = `{
         "models.LoginUserRequest": {
             "type": "object",
             "required": [
-                "email",
                 "password"
             ],
             "properties": {
                 "email": {
+                    "description": "Email is accepted as an alias for login (backward compatible).",
                     "type": "string",
                     "example": "john.doe@example.com"
+                },
+                "login": {
+                    "description": "Login accepts either the user's login or email.",
+                    "type": "string",
+                    "example": "johndoe"
                 },
                 "password": {
                     "type": "string",
@@ -3077,6 +3082,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
+                "login",
                 "name",
                 "password"
             ],
@@ -3084,6 +3090,10 @@ const docTemplate = `{
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
+                },
+                "login": {
+                    "type": "string",
+                    "example": "johndoe"
                 },
                 "name": {
                     "type": "string",
@@ -3188,6 +3198,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "login": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -3302,7 +3315,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{"http", "https"},
 	Title:            "MemoryGuard API",
-	Description:      "Memory nodes, cards, and card items API server.\n**Authentication:** Click **Authorize**, enter your email as username and your password, then Authorize. Swagger will call `POST /users/token` and attach the access token as a Bearer header.",
+	Description:      "Memory nodes, cards, and card items API server.\n**Authentication:** Click **Authorize**, enter your login or email as username and your password, then Authorize. Swagger will call `POST /users/token` and attach the access token as a Bearer header.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

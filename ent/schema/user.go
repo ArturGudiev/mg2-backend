@@ -58,6 +58,9 @@ func (User) Fields() []ent.Field {
 			Immutable(),
 		field.String("name").
 			NotEmpty(),
+		field.String("login").
+			NotEmpty().
+			Unique(),
 		field.String("email").
 			NotEmpty().
 			Unique(),

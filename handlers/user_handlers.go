@@ -15,6 +15,7 @@ func toUserResponse(user *ent.User) models.UserResponse {
 	return models.UserResponse{
 		ID:    user.ID,
 		Name:  user.Name,
+		Login: user.Login,
 		Email: user.Email,
 		Role:  user.Role,
 	}
@@ -94,7 +95,7 @@ func (h *Handler) AddUser(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	newUser, err := h.App.UsersRepository.AddUser(ctx, req.Name, req.Email, req.Password)
+	newUser, err := h.App.UsersRepository.AddUser(ctx, req.Name, req.Login, req.Email, req.Password)
 
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -106,7 +107,7 @@ func (h *Handler) AddUser(c *gin.Context) {
 
 // LoginUser handles POST /users/login
 // @Summary      Logs in a user
-// @Description  Logs in a user and returns tokens. Sets auth cookies.
+// @Description  Logs in a user by login or email and returns tokens. Sets auth cookies.
 // @Tags         users
 // @Accept       json
 // @Produce      json
@@ -123,8 +124,12 @@ func (h *Handler) LoginUser(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
+	if req.Identifier() == "" {
+		c.JSON(400, gin.H{"error": "login or email is required"})
+		return
+	}
 
-	foundUser, accessToken, refreshToken, err := h.authenticateAndIssueTokens(c, req.Email, req.Password)
+	foundUser, accessToken, refreshToken, err := h.authenticateAndIssueTokens(c, req.Identifier(), req.Password)
 	if err != nil {
 		return
 	}
@@ -138,12 +143,12 @@ func (h *Handler) LoginUser(c *gin.Context) {
 
 // IssueToken handles POST /users/token (OAuth2 password grant for Swagger Authorize).
 // @Summary      Issue OAuth2 access token
-// @Description  OAuth2 password grant. Use email as username. Used by Swagger Authorize.
+// @Description  OAuth2 password grant. Use login or email as username. Used by Swagger Authorize.
 // @Tags         users
 // @Accept       application/x-www-form-urlencoded
 // @Produce      json
 // @Param        grant_type  formData  string  true  "Must be password"  Enums(password)
-// @Param        username    formData  string  true  "User email"
+// @Param        username    formData  string  true  "User login or email"
 // @Param        password    formData  string  true  "User password"
 // @Success      200  {object}  models.OAuthTokenResponse
 // @Failure      400  {object}  map[string]string
@@ -181,16 +186,16 @@ func (h *Handler) IssueToken(c *gin.Context) {
 	})
 }
 
-func (h *Handler) authenticateAndIssueTokens(c *gin.Context, email, password string) (*ent.User, string, string, error) {
+func (h *Handler) authenticateAndIssueTokens(c *gin.Context, loginOrEmail, password string) (*ent.User, string, string, error) {
 	ctx := c.Request.Context()
-	foundUser, err := h.App.UsersRepository.GetUserByCredentials(ctx, email, password)
+	foundUser, err := h.App.UsersRepository.GetUserByCredentials(ctx, loginOrEmail, password)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			c.JSON(401, gin.H{"error": "Invalid email or password"})
+			c.JSON(401, gin.H{"error": "Invalid login or password"})
 			return nil, "", "", err
 		}
 		if ent.IsNotSingular(err) {
-			c.JSON(500, gin.H{"error": "Multiple users found for this email"})
+			c.JSON(500, gin.H{"error": "Multiple users found for this login"})
 			return nil, "", "", err
 		}
 		c.JSON(500, gin.H{"error": err.Error()})
