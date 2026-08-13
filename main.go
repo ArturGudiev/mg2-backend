@@ -124,6 +124,7 @@ func main() {
 	router.POST("/memory-node/:id/users", h.GrantMemoryNodeAccess)
 	router.POST("/admin/memory-node/:id/move-to-user", h.MoveSharedNodeToUser)
 	router.POST("/admin/memory-node/:id/remove-from-user", h.RemoveSharedNodeFromUser)
+	router.POST("/admin/send-code", h.SendVerificationCode)
 
 	// Cards
 	router.GET("/card/:id", h.GetCardByID)

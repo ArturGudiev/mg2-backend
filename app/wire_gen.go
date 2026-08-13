@@ -9,7 +9,9 @@ package app
 import (
 	"arturgudiev/memoryguard/repositories"
 	"arturgudiev/memoryguard/services"
+)
 
+import (
 	_ "github.com/lib/pq"
 )
 
@@ -32,6 +34,10 @@ func InitializeApp() (*App, error) {
 	memoryNodesService := services.NewMemoryNodesService(memoryNodesRepository, memoryNodeUsersRepository, cardsRepository, cardUsersRepository, cardUserCountsRepository, cardItemsRepository)
 	cardItemsService := services.NewCardItemsService(cardItemsRepository)
 	cardsService := services.NewCardsService(cardsRepository, cardItemsService, memoryNodesService, cardUserCountsRepository, cardUsersRepository)
-	app := provideApp(client, usersRepository, refreshTokensRepository, memoryNodesRepository, cardsRepository, cardItemsRepository, cardUserCountsRepository, cardUsersRepository, memoryNodeUsersRepository, memoryNodesService, cardsService, cardItemsService)
+	emailService, err := services.NewEmailService()
+	if err != nil {
+		return nil, err
+	}
+	app := provideApp(client, usersRepository, refreshTokensRepository, memoryNodesRepository, cardsRepository, cardItemsRepository, cardUserCountsRepository, cardUsersRepository, memoryNodeUsersRepository, memoryNodesService, cardsService, cardItemsService, emailService)
 	return app, nil
 }

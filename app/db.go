@@ -336,6 +336,7 @@ func provideApp(
 	memoryNodesService *services.MemoryNodesService,
 	cardsService *services.CardsService,
 	cardItemsService *services.CardItemsService,
+	emailService *services.EmailService,
 ) *App {
 	return &App{
 		Client:                    client,
@@ -350,6 +351,7 @@ func provideApp(
 		MemoryNodesService:        memoryNodesService,
 		CardsService:              cardsService,
 		CardItemsService:          cardItemsService,
+		EmailService:              emailService,
 		ctx:                       context.Background(),
 	}
 }

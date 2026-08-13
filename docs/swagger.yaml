@@ -418,6 +418,20 @@ definitions:
     required:
     - userId
     type: object
+  models.SendCodeRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    required:
+    - email
+    type: object
+  models.SendCodeResponse:
+    properties:
+      code:
+        example: "482913"
+        type: string
+    type: object
   models.TextCardInput:
     properties:
       answerTextItems:
@@ -665,6 +679,50 @@ paths:
       summary: Remove shared memory node from user (admin)
       tags:
       - memory-nodes
+  /admin/send-code:
+    post:
+      consumes:
+      - application/json
+      description: Admin-only. Generates a 6-digit OTP, returns it in the response,
+        and sends it to the given email via SMTP.
+      parameters:
+      - description: Recipient email
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.SendCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SendCodeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Login:
+        - api
+      summary: Send email verification code (admin)
+      tags:
+      - admin
   /card-item/{id}:
     delete:
       description: Deletes a card item by ID owned by the authenticated user

@@ -26,6 +26,7 @@ func InitializeApp() (*App, error) {
 		services.NewMemoryNodesService,
 		services.NewCardItemsService,
 		services.NewCardsService,
+		services.NewEmailService,
 		provideApp,
 	)
 	return nil, nil

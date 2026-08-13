@@ -22,6 +22,7 @@ type App struct {
 	MemoryNodesService        *services.MemoryNodesService
 	CardsService              *services.CardsService
 	CardItemsService          *services.CardItemsService
+	EmailService              *services.EmailService
 	ctx                       context.Context
 }
 
