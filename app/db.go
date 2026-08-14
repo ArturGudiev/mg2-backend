@@ -61,6 +61,9 @@ func provideEntClient() (*ent.Client, error) {
 	if err := migrateUserLogins(ctx, dbURL); err != nil {
 		return nil, fmt.Errorf("user login migration: %w", err)
 	}
+	if err := migrateUserVerified(ctx, dbURL); err != nil {
+		return nil, fmt.Errorf("user verified migration: %w", err)
+	}
 
 	client, err := ent.Open("postgres", dbURL)
 	if err != nil {
@@ -320,6 +323,40 @@ func migrateUserLogins(ctx context.Context, dbURL string) error {
 		return err
 	}
 
+	return nil
+}
+
+// migrateUserVerified adds users.verified (default true for existing rows)
+// and drops legacy per-user verification columns now stored in verification_codes.
+func migrateUserVerified(ctx context.Context, dbURL string) error {
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	var usersExists bool
+	if err := db.QueryRowContext(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM information_schema.tables
+			WHERE table_schema = 'public' AND table_name = 'users'
+		)`).Scan(&usersExists); err != nil {
+		return err
+	}
+	if !usersExists {
+		return nil
+	}
+
+	if _, err := db.ExecContext(ctx, `
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS verified BOOLEAN NOT NULL DEFAULT TRUE`); err != nil {
+		return err
+	}
+	if _, err := db.ExecContext(ctx, `ALTER TABLE users DROP COLUMN IF EXISTS verification_code`); err != nil {
+		return err
+	}
+	if _, err := db.ExecContext(ctx, `ALTER TABLE users DROP COLUMN IF EXISTS verification_expires_at`); err != nil {
+		return err
+	}
 	return nil
 }
 

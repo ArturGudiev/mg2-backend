@@ -75,6 +75,11 @@ func PasswordHash(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldPasswordHash, v))
 }
 
+// Verified applies equality check predicate on the "verified" field. It's identical to VerifiedEQ.
+func Verified(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldVerified, v))
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldName, v))
@@ -365,6 +370,16 @@ func RoleNotIn(vs ...schema.UserRole) predicate.User {
 	return predicate.User(sql.FieldNotIn(FieldRole, v...))
 }
 
+// VerifiedEQ applies the EQ predicate on the "verified" field.
+func VerifiedEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldVerified, v))
+}
+
+// VerifiedNEQ applies the NEQ predicate on the "verified" field.
+func VerifiedNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldVerified, v))
+}
+
 // HasRefreshTokens applies the HasEdge predicate on the "refresh_tokens" edge.
 func HasRefreshTokens() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -518,6 +533,29 @@ func HasMemoryNodeUsers() predicate.User {
 func HasMemoryNodeUsersWith(preds ...predicate.MemoryNodeUser) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newMemoryNodeUsersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasVerificationCodes applies the HasEdge predicate on the "verification_codes" edge.
+func HasVerificationCodes() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, VerificationCodesTable, VerificationCodesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasVerificationCodesWith applies the HasEdge predicate on the "verification_codes" edge with a given conditions (other predicates).
+func HasVerificationCodesWith(preds ...predicate.VerificationCode) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newVerificationCodesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

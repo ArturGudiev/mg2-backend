@@ -12,6 +12,7 @@ import (
 	"arturgudiev/memoryguard/ent/refreshtoken"
 	"arturgudiev/memoryguard/ent/schema"
 	"arturgudiev/memoryguard/ent/user"
+	"arturgudiev/memoryguard/ent/verificationcode"
 	"context"
 	"errors"
 	"fmt"
@@ -61,6 +62,20 @@ func (_c *UserCreate) SetRole(v schema.UserRole) *UserCreate {
 func (_c *UserCreate) SetNillableRole(v *schema.UserRole) *UserCreate {
 	if v != nil {
 		_c.SetRole(*v)
+	}
+	return _c
+}
+
+// SetVerified sets the "verified" field.
+func (_c *UserCreate) SetVerified(v bool) *UserCreate {
+	_c.mutation.SetVerified(v)
+	return _c
+}
+
+// SetNillableVerified sets the "verified" field if the given value is not nil.
+func (_c *UserCreate) SetNillableVerified(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetVerified(*v)
 	}
 	return _c
 }
@@ -176,6 +191,21 @@ func (_c *UserCreate) AddMemoryNodeUsers(v ...*MemoryNodeUser) *UserCreate {
 	return _c.AddMemoryNodeUserIDs(ids...)
 }
 
+// AddVerificationCodeIDs adds the "verification_codes" edge to the VerificationCode entity by IDs.
+func (_c *UserCreate) AddVerificationCodeIDs(ids ...int) *UserCreate {
+	_c.mutation.AddVerificationCodeIDs(ids...)
+	return _c
+}
+
+// AddVerificationCodes adds the "verification_codes" edges to the VerificationCode entity.
+func (_c *UserCreate) AddVerificationCodes(v ...*VerificationCode) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddVerificationCodeIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_c *UserCreate) Mutation() *UserMutation {
 	return _c.mutation
@@ -214,6 +244,10 @@ func (_c *UserCreate) defaults() {
 	if _, ok := _c.mutation.Role(); !ok {
 		v := user.DefaultRole
 		_c.mutation.SetRole(v)
+	}
+	if _, ok := _c.mutation.Verified(); !ok {
+		v := user.DefaultVerified
+		_c.mutation.SetVerified(v)
 	}
 }
 
@@ -258,6 +292,9 @@ func (_c *UserCreate) check() error {
 		if err := user.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "User.role": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.Verified(); !ok {
+		return &ValidationError{Name: "verified", err: errors.New(`ent: missing required field "User.verified"`)}
 	}
 	if v, ok := _c.mutation.ID(); ok {
 		if err := user.IDValidator(v); err != nil {
@@ -315,6 +352,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Role(); ok {
 		_spec.SetField(user.FieldRole, field.TypeEnum, value)
 		_node.Role = value
+	}
+	if value, ok := _c.mutation.Verified(); ok {
+		_spec.SetField(user.FieldVerified, field.TypeBool, value)
+		_node.Verified = value
 	}
 	if nodes := _c.mutation.RefreshTokensIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -421,6 +462,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.VerificationCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VerificationCodesTable,
+			Columns: []string{user.VerificationCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -299,12 +299,35 @@ var (
 		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "password_hash", Type: field.TypeString},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "user"}, Default: "user"},
+		{Name: "verified", Type: field.TypeBool, Default: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+	}
+	// VerificationCodesColumns holds the columns for the "verification_codes" table.
+	VerificationCodesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "code", Type: field.TypeString},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// VerificationCodesTable holds the schema information for the "verification_codes" table.
+	VerificationCodesTable = &schema.Table{
+		Name:       "verification_codes",
+		Columns:    VerificationCodesColumns,
+		PrimaryKey: []*schema.Column{VerificationCodesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "verification_codes_users_verification_codes",
+				Columns:    []*schema.Column{VerificationCodesColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
@@ -316,6 +339,7 @@ var (
 		MemoryNodeUsersTable,
 		RefreshTokensTable,
 		UsersTable,
+		VerificationCodesTable,
 	}
 )
 
@@ -353,5 +377,9 @@ func init() {
 	}
 	UsersTable.Annotation = &entsql.Annotation{
 		Table: "users",
+	}
+	VerificationCodesTable.ForeignKeys[0].RefTable = UsersTable
+	VerificationCodesTable.Annotation = &entsql.Annotation{
+		Table: "verification_codes",
 	}
 }

@@ -37,16 +37,27 @@ type RefreshTokenRequest struct {
 }
 
 type UserResponse struct {
-	ID    int             `json:"id"`
-	Name  string          `json:"name"`
-	Login string          `json:"login"`
-	Email string          `json:"email"`
-	Role  schema.UserRole `json:"role"`
+	ID       int             `json:"id"`
+	Name     string          `json:"name"`
+	Login    string          `json:"login"`
+	Email    string          `json:"email"`
+	Role     schema.UserRole `json:"role"`
+	Verified bool            `json:"verified"`
 }
 
 type NewUserRequest struct {
-	Name     string `json:"name" binding:"required" example:"John Doe"`
-	Login    string `json:"login" binding:"required" example:"johndoe"`
-	Email    string `json:"email" binding:"required" example:"john.doe@example.com"`
-	Password string `json:"password" binding:"required" example:"password"`
+	Name           string `json:"name" binding:"required" example:"John Doe"`
+	Login          string `json:"login" example:"johndoe"`
+	Email          string `json:"email" binding:"required" example:"john.doe@example.com"`
+	Password       string `json:"password" binding:"required" example:"password"`
+	AddSampleCards bool   `json:"addSampleCards" example:"true"`
+}
+
+type VerifyUserRequest struct {
+	Email string `json:"email" binding:"required" example:"john.doe@example.com"`
+	Code  string `json:"code" binding:"required" example:"482913"`
+}
+
+type ResendCodeRequest struct {
+	Email string `json:"email" binding:"required" example:"john.doe@example.com"`
 }

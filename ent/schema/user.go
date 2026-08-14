@@ -70,6 +70,9 @@ func (User) Fields() []ent.Field {
 		field.Enum("role").
 			GoType(UserRole("")).
 			Default(string(UserRoleUser)),
+		// Default true so existing users stay able to log in. Registration sets false.
+		field.Bool("verified").
+			Default(true),
 	}
 }
 
@@ -83,6 +86,7 @@ func (User) Edges() []ent.Edge {
 		edge.To("card_user_counts", CardUserCount.Type),
 		edge.To("card_users", CardUser.Type),
 		edge.To("memory_node_users", MemoryNodeUser.Type),
+		edge.To("verification_codes", VerificationCode.Type),
 	}
 }
 

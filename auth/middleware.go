@@ -22,6 +22,10 @@ func isPublicRoute(method, path string) bool {
 		return true
 	case method == http.MethodPost && path == "/users":
 		return true
+	case method == http.MethodPost && path == "/users/verify":
+		return true
+	case method == http.MethodPost && path == "/users/resend-code":
+		return true
 	case method == http.MethodPost && path == "/users/refresh":
 		return true
 	case method == http.MethodPost && path == "/users/logout":

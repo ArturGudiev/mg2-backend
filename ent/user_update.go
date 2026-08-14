@@ -13,6 +13,7 @@ import (
 	"arturgudiev/memoryguard/ent/refreshtoken"
 	"arturgudiev/memoryguard/ent/schema"
 	"arturgudiev/memoryguard/ent/user"
+	"arturgudiev/memoryguard/ent/verificationcode"
 	"context"
 	"errors"
 	"fmt"
@@ -101,6 +102,20 @@ func (_u *UserUpdate) SetRole(v schema.UserRole) *UserUpdate {
 func (_u *UserUpdate) SetNillableRole(v *schema.UserRole) *UserUpdate {
 	if v != nil {
 		_u.SetRole(*v)
+	}
+	return _u
+}
+
+// SetVerified sets the "verified" field.
+func (_u *UserUpdate) SetVerified(v bool) *UserUpdate {
+	_u.mutation.SetVerified(v)
+	return _u
+}
+
+// SetNillableVerified sets the "verified" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableVerified(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetVerified(*v)
 	}
 	return _u
 }
@@ -208,6 +223,21 @@ func (_u *UserUpdate) AddMemoryNodeUsers(v ...*MemoryNodeUser) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddMemoryNodeUserIDs(ids...)
+}
+
+// AddVerificationCodeIDs adds the "verification_codes" edge to the VerificationCode entity by IDs.
+func (_u *UserUpdate) AddVerificationCodeIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddVerificationCodeIDs(ids...)
+	return _u
+}
+
+// AddVerificationCodes adds the "verification_codes" edges to the VerificationCode entity.
+func (_u *UserUpdate) AddVerificationCodes(v ...*VerificationCode) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddVerificationCodeIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -362,6 +392,27 @@ func (_u *UserUpdate) RemoveMemoryNodeUsers(v ...*MemoryNodeUser) *UserUpdate {
 	return _u.RemoveMemoryNodeUserIDs(ids...)
 }
 
+// ClearVerificationCodes clears all "verification_codes" edges to the VerificationCode entity.
+func (_u *UserUpdate) ClearVerificationCodes() *UserUpdate {
+	_u.mutation.ClearVerificationCodes()
+	return _u
+}
+
+// RemoveVerificationCodeIDs removes the "verification_codes" edge to VerificationCode entities by IDs.
+func (_u *UserUpdate) RemoveVerificationCodeIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveVerificationCodeIDs(ids...)
+	return _u
+}
+
+// RemoveVerificationCodes removes "verification_codes" edges to VerificationCode entities.
+func (_u *UserUpdate) RemoveVerificationCodes(v ...*VerificationCode) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveVerificationCodeIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *UserUpdate) Save(ctx context.Context) (int, error) {
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
@@ -445,6 +496,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(user.FieldRole, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Verified(); ok {
+		_spec.SetField(user.FieldVerified, field.TypeBool, value)
 	}
 	if _u.mutation.RefreshTokensCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -761,6 +815,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.VerificationCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VerificationCodesTable,
+			Columns: []string{user.VerificationCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedVerificationCodesIDs(); len(nodes) > 0 && !_u.mutation.VerificationCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VerificationCodesTable,
+			Columns: []string{user.VerificationCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.VerificationCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VerificationCodesTable,
+			Columns: []string{user.VerificationCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -847,6 +946,20 @@ func (_u *UserUpdateOne) SetRole(v schema.UserRole) *UserUpdateOne {
 func (_u *UserUpdateOne) SetNillableRole(v *schema.UserRole) *UserUpdateOne {
 	if v != nil {
 		_u.SetRole(*v)
+	}
+	return _u
+}
+
+// SetVerified sets the "verified" field.
+func (_u *UserUpdateOne) SetVerified(v bool) *UserUpdateOne {
+	_u.mutation.SetVerified(v)
+	return _u
+}
+
+// SetNillableVerified sets the "verified" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableVerified(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetVerified(*v)
 	}
 	return _u
 }
@@ -954,6 +1067,21 @@ func (_u *UserUpdateOne) AddMemoryNodeUsers(v ...*MemoryNodeUser) *UserUpdateOne
 		ids[i] = v[i].ID
 	}
 	return _u.AddMemoryNodeUserIDs(ids...)
+}
+
+// AddVerificationCodeIDs adds the "verification_codes" edge to the VerificationCode entity by IDs.
+func (_u *UserUpdateOne) AddVerificationCodeIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddVerificationCodeIDs(ids...)
+	return _u
+}
+
+// AddVerificationCodes adds the "verification_codes" edges to the VerificationCode entity.
+func (_u *UserUpdateOne) AddVerificationCodes(v ...*VerificationCode) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddVerificationCodeIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -1108,6 +1236,27 @@ func (_u *UserUpdateOne) RemoveMemoryNodeUsers(v ...*MemoryNodeUser) *UserUpdate
 	return _u.RemoveMemoryNodeUserIDs(ids...)
 }
 
+// ClearVerificationCodes clears all "verification_codes" edges to the VerificationCode entity.
+func (_u *UserUpdateOne) ClearVerificationCodes() *UserUpdateOne {
+	_u.mutation.ClearVerificationCodes()
+	return _u
+}
+
+// RemoveVerificationCodeIDs removes the "verification_codes" edge to VerificationCode entities by IDs.
+func (_u *UserUpdateOne) RemoveVerificationCodeIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveVerificationCodeIDs(ids...)
+	return _u
+}
+
+// RemoveVerificationCodes removes "verification_codes" edges to VerificationCode entities.
+func (_u *UserUpdateOne) RemoveVerificationCodes(v ...*VerificationCode) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveVerificationCodeIDs(ids...)
+}
+
 // Where appends a list predicates to the UserUpdate builder.
 func (_u *UserUpdateOne) Where(ps ...predicate.User) *UserUpdateOne {
 	_u.mutation.Where(ps...)
@@ -1221,6 +1370,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(user.FieldRole, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Verified(); ok {
+		_spec.SetField(user.FieldVerified, field.TypeBool, value)
 	}
 	if _u.mutation.RefreshTokensCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1530,6 +1682,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(memorynodeuser.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.VerificationCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VerificationCodesTable,
+			Columns: []string{user.VerificationCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedVerificationCodesIDs(); len(nodes) > 0 && !_u.mutation.VerificationCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VerificationCodesTable,
+			Columns: []string{user.VerificationCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.VerificationCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VerificationCodesTable,
+			Columns: []string{user.VerificationCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

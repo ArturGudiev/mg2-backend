@@ -291,6 +291,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/users/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "Login": [
+                            "api"
+                        ]
+                    }
+                ],
+                "description": "Admin-only. Deletes the user and their related data (nodes, cards, tokens). Admins cannot delete themselves.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete a user (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/card-item/{id}": {
             "get": {
                 "security": [
@@ -2176,7 +2245,7 @@ const docTemplate = `{
                         ]
                     }
                 ],
-                "description": "Adds a new user",
+                "description": "Creates an unverified user (login is optional) and emails a verification code. Existing unverified emails can re-register to update details and resend the code.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2186,7 +2255,7 @@ const docTemplate = `{
                 "tags": [
                     "users"
                 ],
-                "summary": "Add a user",
+                "summary": "Register a user",
                 "parameters": [
                     {
                         "description": "User to add",
@@ -2436,6 +2505,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/resend-code": {
+            "post": {
+                "security": [
+                    {
+                        "": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "Sends a new verification code if the email belongs to an unverified account.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Resend email verification code",
+                "parameters": [
+                    {
+                        "description": "Recipient email",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ResendCodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users/token": {
             "post": {
                 "security": [
@@ -2500,6 +2631,65 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/verify": {
+            "post": {
+                "security": [
+                    {
+                        "": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "Confirms the registration code sent to the user's email and logs them in.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Verify a user email",
+                "parameters": [
+                    {
+                        "description": "Email and verification code",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.VerifyUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -3150,11 +3340,14 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
-                "login",
                 "name",
                 "password"
             ],
             "properties": {
+                "addSampleCards": {
+                    "type": "boolean",
+                    "example": true
+                },
                 "email": {
                     "type": "string",
                     "example": "john.doe@example.com"
@@ -3213,6 +3406,18 @@ const docTemplate = `{
                 },
                 "userId": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.ResendCodeRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
                 }
             }
         },
@@ -3296,6 +3501,26 @@ const docTemplate = `{
                 },
                 "role": {
                     "$ref": "#/definitions/schema.UserRole"
+                },
+                "verified": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.VerifyUserRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "email"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "482913"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
                 }
             }
         },

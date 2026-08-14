@@ -28,6 +28,8 @@ type Tx struct {
 	RefreshToken *RefreshTokenClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// VerificationCode is the client for interacting with the VerificationCode builders.
+	VerificationCode *VerificationCodeClient
 
 	// lazily loaded.
 	client     *Client
@@ -167,6 +169,7 @@ func (tx *Tx) init() {
 	tx.MemoryNodeUser = NewMemoryNodeUserClient(tx.config)
 	tx.RefreshToken = NewRefreshTokenClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.VerificationCode = NewVerificationCodeClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

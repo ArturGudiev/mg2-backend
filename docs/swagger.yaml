@@ -371,6 +371,9 @@ definitions:
     type: object
   models.NewUserRequest:
     properties:
+      addSampleCards:
+        example: true
+        type: boolean
       email:
         example: john.doe@example.com
         type: string
@@ -385,7 +388,6 @@ definitions:
         type: string
     required:
     - email
-    - login
     - name
     - password
     type: object
@@ -417,6 +419,14 @@ definitions:
         type: integer
     required:
     - userId
+    type: object
+  models.ResendCodeRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+    required:
+    - email
     type: object
   models.SendCodeRequest:
     properties:
@@ -473,6 +483,20 @@ definitions:
         type: string
       role:
         $ref: '#/definitions/schema.UserRole'
+      verified:
+        type: boolean
+    type: object
+  models.VerifyUserRequest:
+    properties:
+      code:
+        example: "482913"
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+    required:
+    - code
+    - email
     type: object
   schema.CardItemType:
     enum:
@@ -721,6 +745,51 @@ paths:
       - Login:
         - api
       summary: Send email verification code (admin)
+      tags:
+      - admin
+  /admin/users/{id}:
+    delete:
+      description: Admin-only. Deletes the user and their related data (nodes, cards,
+        tokens). Admins cannot delete themselves.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Login:
+        - api
+      summary: Delete a user (admin)
       tags:
       - admin
   /card-item/{id}:
@@ -1941,7 +2010,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Adds a new user
+      description: Creates an unverified user (login is optional) and emails a verification
+        code. Existing unverified emails can re-register to update details and resend
+        the code.
       parameters:
       - description: User to add
         in: body
@@ -1971,7 +2042,7 @@ paths:
       security:
       - "":
         - ""
-      summary: Add a user
+      summary: Register a user
       tags:
       - users
   /users/{id}:
@@ -2148,6 +2219,46 @@ paths:
       summary: Refresh access token
       tags:
       - users
+  /users/resend-code:
+    post:
+      consumes:
+      - application/json
+      description: Sends a new verification code if the email belongs to an unverified
+        account.
+      parameters:
+      - description: Recipient email
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResendCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - "":
+        - ""
+      summary: Resend email verification code
+      tags:
+      - users
   /users/token:
     post:
       consumes:
@@ -2201,6 +2312,44 @@ paths:
       - "":
         - ""
       summary: Issue OAuth2 access token
+      tags:
+      - users
+  /users/verify:
+    post:
+      consumes:
+      - application/json
+      description: Confirms the registration code sent to the user's email and logs
+        them in.
+      parameters:
+      - description: Email and verification code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.VerifyUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LoginUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - "":
+        - ""
+      summary: Verify a user email
       tags:
       - users
 schemes:

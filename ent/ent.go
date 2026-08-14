@@ -11,6 +11,7 @@ import (
 	"arturgudiev/memoryguard/ent/memorynodeuser"
 	"arturgudiev/memoryguard/ent/refreshtoken"
 	"arturgudiev/memoryguard/ent/user"
+	"arturgudiev/memoryguard/ent/verificationcode"
 	"context"
 	"errors"
 	"fmt"
@@ -80,14 +81,15 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			card.Table:           card.ValidColumn,
-			carditem.Table:       carditem.ValidColumn,
-			carduser.Table:       carduser.ValidColumn,
-			cardusercount.Table:  cardusercount.ValidColumn,
-			memorynode.Table:     memorynode.ValidColumn,
-			memorynodeuser.Table: memorynodeuser.ValidColumn,
-			refreshtoken.Table:   refreshtoken.ValidColumn,
-			user.Table:           user.ValidColumn,
+			card.Table:             card.ValidColumn,
+			carditem.Table:         carditem.ValidColumn,
+			carduser.Table:         carduser.ValidColumn,
+			cardusercount.Table:    cardusercount.ValidColumn,
+			memorynode.Table:       memorynode.ValidColumn,
+			memorynodeuser.Table:   memorynodeuser.ValidColumn,
+			refreshtoken.Table:     refreshtoken.ValidColumn,
+			user.Table:             user.ValidColumn,
+			verificationcode.Table: verificationcode.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

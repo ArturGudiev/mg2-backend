@@ -27,6 +27,8 @@ type User struct {
 	PasswordHash string `json:"-"`
 	// Role holds the value of the "role" field.
 	Role schema.UserRole `json:"role,omitempty"`
+	// Verified holds the value of the "verified" field.
+	Verified bool `json:"verified,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -49,9 +51,11 @@ type UserEdges struct {
 	CardUsers []*CardUser `json:"card_users,omitempty"`
 	// MemoryNodeUsers holds the value of the memory_node_users edge.
 	MemoryNodeUsers []*MemoryNodeUser `json:"memory_node_users,omitempty"`
+	// VerificationCodes holds the value of the verification_codes edge.
+	VerificationCodes []*VerificationCode `json:"verification_codes,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 }
 
 // RefreshTokensOrErr returns the RefreshTokens value or an error if the edge
@@ -117,11 +121,22 @@ func (e UserEdges) MemoryNodeUsersOrErr() ([]*MemoryNodeUser, error) {
 	return nil, &NotLoadedError{edge: "memory_node_users"}
 }
 
+// VerificationCodesOrErr returns the VerificationCodes value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) VerificationCodesOrErr() ([]*VerificationCode, error) {
+	if e.loadedTypes[7] {
+		return e.VerificationCodes, nil
+	}
+	return nil, &NotLoadedError{edge: "verification_codes"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case user.FieldVerified:
+			values[i] = new(sql.NullBool)
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
 		case user.FieldName, user.FieldLogin, user.FieldEmail, user.FieldPasswordHash, user.FieldRole:
@@ -177,6 +192,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Role = schema.UserRole(value.String)
 			}
+		case user.FieldVerified:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field verified", values[i])
+			} else if value.Valid {
+				_m.Verified = value.Bool
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -225,6 +246,11 @@ func (_m *User) QueryMemoryNodeUsers() *MemoryNodeUserQuery {
 	return NewUserClient(_m.config).QueryMemoryNodeUsers(_m)
 }
 
+// QueryVerificationCodes queries the "verification_codes" edge of the User entity.
+func (_m *User) QueryVerificationCodes() *VerificationCodeQuery {
+	return NewUserClient(_m.config).QueryVerificationCodes(_m)
+}
+
 // Update returns a builder for updating this User.
 // Note that you need to call User.Unwrap() before calling this method if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -261,6 +287,9 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("role=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Role))
+	builder.WriteString(", ")
+	builder.WriteString("verified=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Verified))
 	builder.WriteByte(')')
 	return builder.String()
 }

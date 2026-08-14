@@ -85,8 +85,8 @@ func (s *EmailService) SendVerificationCode(to, code string) error {
 	msg := gomail.NewMessage()
 	msg.SetHeader("From", s.from)
 	msg.SetHeader("To", to)
-	msg.SetHeader("Subject", "Код подтверждения")
-	msg.SetBody("text/plain", fmt.Sprintf("Ваш код подтверждения: %s", code))
+	msg.SetHeader("Subject", "Проверочный код")
+	msg.SetBody("text/plain", fmt.Sprintf("Ваш проверочный код для программы Memory Guard: %s", code))
 
 	dialer := gomail.NewDialer(s.host, s.port, s.username, s.password)
 	if s.port == 465 {

@@ -104,6 +104,8 @@ func main() {
 	router.GET("/users/me", h.GetMe)
 	router.GET("/users/:id", h.GetUser)
 	router.POST("/users", h.AddUser)
+	router.POST("/users/verify", h.VerifyUser)
+	router.POST("/users/resend-code", h.ResendVerificationCode)
 	router.POST("/users/login", h.LoginUser)
 	router.POST("/users/token", h.IssueToken)
 	router.POST("/users/refresh", h.RefreshUserToken)
@@ -125,6 +127,7 @@ func main() {
 	router.POST("/admin/memory-node/:id/move-to-user", h.MoveSharedNodeToUser)
 	router.POST("/admin/memory-node/:id/remove-from-user", h.RemoveSharedNodeFromUser)
 	router.POST("/admin/send-code", h.SendVerificationCode)
+	router.DELETE("/admin/users/:id", h.DeleteUser)
 
 	// Cards
 	router.GET("/card/:id", h.GetCardByID)

@@ -25,6 +25,8 @@ const (
 	FieldPasswordHash = "password_hash"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
+	// FieldVerified holds the string denoting the verified field in the database.
+	FieldVerified = "verified"
 	// EdgeRefreshTokens holds the string denoting the refresh_tokens edge name in mutations.
 	EdgeRefreshTokens = "refresh_tokens"
 	// EdgeMemoryNodes holds the string denoting the memory_nodes edge name in mutations.
@@ -39,6 +41,8 @@ const (
 	EdgeCardUsers = "card_users"
 	// EdgeMemoryNodeUsers holds the string denoting the memory_node_users edge name in mutations.
 	EdgeMemoryNodeUsers = "memory_node_users"
+	// EdgeVerificationCodes holds the string denoting the verification_codes edge name in mutations.
+	EdgeVerificationCodes = "verification_codes"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// RefreshTokensTable is the table that holds the refresh_tokens relation/edge.
@@ -90,6 +94,13 @@ const (
 	MemoryNodeUsersInverseTable = "memory_node_users"
 	// MemoryNodeUsersColumn is the table column denoting the memory_node_users relation/edge.
 	MemoryNodeUsersColumn = "user_id"
+	// VerificationCodesTable is the table that holds the verification_codes relation/edge.
+	VerificationCodesTable = "verification_codes"
+	// VerificationCodesInverseTable is the table name for the VerificationCode entity.
+	// It exists in this package in order to avoid circular dependency with the "verificationcode" package.
+	VerificationCodesInverseTable = "verification_codes"
+	// VerificationCodesColumn is the table column denoting the verification_codes relation/edge.
+	VerificationCodesColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -100,6 +111,7 @@ var Columns = []string{
 	FieldEmail,
 	FieldPasswordHash,
 	FieldRole,
+	FieldVerified,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -121,6 +133,8 @@ var (
 	EmailValidator func(string) error
 	// PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
 	PasswordHashValidator func(string) error
+	// DefaultVerified holds the default value on creation for the "verified" field.
+	DefaultVerified bool
 	// IDValidator is a validator for the "id" field. It is called by the builders before save.
 	IDValidator func(int) error
 )
@@ -168,6 +182,11 @@ func ByPasswordHash(opts ...sql.OrderTermOption) OrderOption {
 // ByRole orders the results by the role field.
 func ByRole(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRole, opts...).ToFunc()
+}
+
+// ByVerified orders the results by the verified field.
+func ByVerified(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVerified, opts...).ToFunc()
 }
 
 // ByRefreshTokensCount orders the results by refresh_tokens count.
@@ -267,6 +286,20 @@ func ByMemoryNodeUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newMemoryNodeUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByVerificationCodesCount orders the results by verification_codes count.
+func ByVerificationCodesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newVerificationCodesStep(), opts...)
+	}
+}
+
+// ByVerificationCodes orders the results by verification_codes terms.
+func ByVerificationCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVerificationCodesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRefreshTokensStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -314,5 +347,12 @@ func newMemoryNodeUsersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MemoryNodeUsersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MemoryNodeUsersTable, MemoryNodeUsersColumn),
+	)
+}
+func newVerificationCodesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VerificationCodesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, VerificationCodesTable, VerificationCodesColumn),
 	)
 }

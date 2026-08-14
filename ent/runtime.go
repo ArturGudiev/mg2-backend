@@ -12,6 +12,7 @@ import (
 	"arturgudiev/memoryguard/ent/refreshtoken"
 	"arturgudiev/memoryguard/ent/schema"
 	"arturgudiev/memoryguard/ent/user"
+	"arturgudiev/memoryguard/ent/verificationcode"
 	"time"
 )
 
@@ -187,8 +188,30 @@ func init() {
 	userDescPasswordHash := userFields[4].Descriptor()
 	// user.PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
 	user.PasswordHashValidator = userDescPasswordHash.Validators[0].(func(string) error)
+	// userDescVerified is the schema descriptor for verified field.
+	userDescVerified := userFields[6].Descriptor()
+	// user.DefaultVerified holds the default value on creation for the verified field.
+	user.DefaultVerified = userDescVerified.Default.(bool)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userFields[0].Descriptor()
 	// user.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	user.IDValidator = userDescID.Validators[0].(func(int) error)
+	verificationcodeFields := schema.VerificationCode{}.Fields()
+	_ = verificationcodeFields
+	// verificationcodeDescUserID is the schema descriptor for user_id field.
+	verificationcodeDescUserID := verificationcodeFields[1].Descriptor()
+	// verificationcode.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	verificationcode.UserIDValidator = verificationcodeDescUserID.Validators[0].(func(int) error)
+	// verificationcodeDescCode is the schema descriptor for code field.
+	verificationcodeDescCode := verificationcodeFields[2].Descriptor()
+	// verificationcode.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	verificationcode.CodeValidator = verificationcodeDescCode.Validators[0].(func(string) error)
+	// verificationcodeDescCreatedAt is the schema descriptor for created_at field.
+	verificationcodeDescCreatedAt := verificationcodeFields[4].Descriptor()
+	// verificationcode.DefaultCreatedAt holds the default value on creation for the created_at field.
+	verificationcode.DefaultCreatedAt = verificationcodeDescCreatedAt.Default.(func() time.Time)
+	// verificationcodeDescID is the schema descriptor for id field.
+	verificationcodeDescID := verificationcodeFields[0].Descriptor()
+	// verificationcode.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	verificationcode.IDValidator = verificationcodeDescID.Validators[0].(func(int) error)
 }
